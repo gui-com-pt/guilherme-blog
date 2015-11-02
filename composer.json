@@ -1,0 +1,12 @@
+{
+    "name": "guilhermegeek/guilherme-blog",
+    "authors": [
+        {
+            "name": "Guilherme Cardoso",
+            "email": "email@guilhermecardoso.pt"
+        }
+    ],
+    "require": {
+        "guilhermegeek/pi-framework": "dev-dev"
+    }
+}

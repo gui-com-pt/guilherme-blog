@@ -1,0 +1,242 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ng-tags-input/3.0.0/ng-tags-input.css">
+    <!-- inject:css -->
+    <link rel="stylesheet" href="dist/site.css">
+    <!-- endinject -->
+    <meta facebook-meta>
+    <script src="/dist/jquery.js"></script>
+    <script src="/dist/masonry.js"></script>
+    <script src="/dist/angular.js"></script>
+    <script src="/dist/dependencies.js"></script>
+    <script src="/dist/pi-angular.js"></script>
+    <script src="/dist/app.js"></script>
+    <script src="/dist/app.min.js"></script>
+    <script src="/dist/templates.js"></script>
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-41887317-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <base href="/">
+    <meta name="fragment" content="!">
+</head>
+<body>
+  <div class="pi-nav__wrapper pi-nav__wrapper--fixed">
+      <div class="pi-nav">
+      <ul>
+            <li><a ui-sref="article-list({categoryId: null, name: null})" ui-sref-opts="{reload: true}">codigo.ovh</a></li>
+            <li><a ui-sref="learn">aprende a programar</a></li>
+            <li ng-show="$root.isAuthenticated"><a ui-sref="question-list">Perguntas</a></li>
+            <li ng-show="$root.isAuthenticated"><a href="">Gestão</a>
+                <ul>
+                    <li><a ui-sref="article-create">Criar Artigo</a></li>
+                    <li><a ui-sref="category-list">Categorias</a></li>
+                    <li><a ui-sref="category-create">Criar Categoria</a></li>
+                </ul>
+            </li>
+
+        </ul>
+          <ul class="pi-list__right">
+              <li>
+                  <form ng-submit="$root.search(searchModel)">
+                      <div class="pi-form__btn-group">
+                          <div ng-show="current.name != 'home'" class="pi-breadcrumb" pi-breadcrumb></div>
+                          <div class="pi-form__group">
+                              <input type="text" ng-model="searchModel" placeholder="Pesquisar" class="pi-form__control" />
+                          </div>
+                      </div>
+                  </form>
+              </li>
+          </ul>
+          </div>
+  </div>
+  <div class="pi-nav__wrapper pi-nav__sub">
+  <div class="pi-nav">
+  <ul>
+    <li ng-repeat="cat in $root.categories"><a ui-sref="article-list({categoryId: cat.id, name: null})" ng-bind="cat.displayName"></a></li>
+    </ul>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <ui-view class="content"></ui-view>
+    <div class="sidebar-right">
+      <div data-google-ad-sense></div>
+      <div codigo-sidebar></div>
+    </div>
+
+  </div>
+  <script type="text/ng-template" id="html/pi/comment-window.html">
+      <h3><span ng-bind="comments.length"></span> Comentários</h3>
+      <div pi-comment-form></div>
+      <div ng-show="showForm" class="noauth-form">
+        <div class="noauth-form__login">
+        <h4>Entra com</h4>
+          <div class="noauth-form__login--social">
+            <i class="icon ion-social-facebook-outline"></i>
+            <i class="icon ion-social-google-outline"></i>
+            <i class="icon ion-social-twitter-outline"></i>
+          </div>
+          <div class="pi-form__group">
+            <input ng-model="login.email" type="text" placeholder="Email" class="pi-form__control" />
+          </div>
+          <form ng-show="login.email.length > 0" ng-submit="login()">
+            <div class="pi-form__group">
+              <input ng-model="login.password" type="password" placeholder="Password" class="pi-form__control"/>
+            </div>
+            <div class="pi-form__footer">
+              <button class="button-primary button-block" type="submit">Entrar</button>
+            </div>
+          </form>
+
+        </div>
+        <div class="noauth-form__signup">
+          <h4>Ou regista-te</h4>
+          <div class="pi-form__group">
+            <input ng-model="signup.name" type="text" placeholder="Nome" class="pi-form__control" />
+          </div>
+          <div ng-show="signup.name.length > 0">
+            <div class="pi-form__group">
+              <input ng-model="signup.name" type="text" placeholder="Email" class="pi-form__control" />
+            </div>
+            <div class="pi-form__group">
+              <input ng-model="signup.name" type="password" placeholder="Password" class="pi-form__control" />
+            </div>
+            <div class="pi-form__footer">
+              By signing up, you agree to the Disqus <a href="">Basic Rules</a>, <a href="">Terms of Service</a>, and <a href="">Privacy Policy</a>.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comment-none" ng-if="comments.length === 0">Sê o primeiro a comentar</div>
+      <div ng-repeat="comment in comments | reverse" pi-comment-message comment="comment"></div>
+   </script>
+<script type="text/ng-template" id="/html/pi/breadcrumb.html">
+  <div class="pi-form__group">
+    <button class="btn btn-primary btn-xs pi-breadcrumb__btn-search" href="" ng-click="previousState()"><i class="fa fa-arrow-circle-left"></i> </a></button>
+  </div>
+  <div class="pi-form__group" ng-repeat="item in $root.menuItems" ng-if="item.isAnchor" >
+    <button class="btn btn-primary btn-xs btn-transparent" ui-sref="{{item.state}}"><span class="subMenu-icon" ng-if="item.icon"><i class="{{item.icon}}"></i> </span><span ng-bind="item.label"></span></button>
+  </button>
+  <div class="pi-form__group" ng-repeat="item in $root.menuItems" ng-if="item.isButton && item != null">
+    <button class="btn btn-primary btn-xs btn-transparent" href="#" ng-click="item.action()"><i class="{{item.icon}}"></i> <span ng-bind="item.label"></span></button>
+  </div>
+
+    </div>
+</div>
+</script>
+  <script type="text/ng-template" id="html/pi/comment-message.html">
+      <div class="comment-message">
+          <a class="comment-message__author" ui-sref="profile.home({id: comment.author.id})">
+              <img class="comment-message__author-img" ng-src="http://lorempixel.com/100/100/people/" />
+          </a>
+          <div class="comment-message__body">
+              <div><span ng-bind="comment.author.displayName"></span><span class="comment-message__created" ng-bind="comment.created"></span></div>
+              <!--<div>aqui metiamos a sport phrase dele</div>-->
+              <div ng-bind="comment.message"></div>
+          </div>
+      </div>
+  </script>
+  <script type="text/ng-template" id="html/pi/comment-form.html">
+      <div class="pi-form pi-comment-form">
+          <form class="pi-form__group" ng-submit="send(message)">
+              <textarea ng-keypress="writting()" rows="4" ng-model="message" class="pi-form__control"></textarea>
+      </div>
+      <div class="pi-form__footer" ng-show="$root.isAuthenticated">
+          <button type="button" ng-click="send(message)">Enviar Comentário</button>
+      </div>
+      </div>
+  </script>
+  <script type="text/ng-template" id="html/upload-thumbnail.html">
+      <div class="upload-thumbnail__btn" ngf-select ngf-change="upload($files)">
+          <div>Upload Foto</div>
+          <img ng-src="{{thumbnailSrc}}">
+          <div ng-show="uploadProgress > 0 && uploadProgress < 100">
+              A enviar... <!--{{ctrl.uploadProgress}} %-->
+          </div>
+      </div>
+</script>
+  <!--<div class="card-set__wrapper">
+    <div class="card-set" pi-class-hover="card-set--hover">
+      <div class="card-set__img">
+        <img src="http://2.bp.blogspot.com/-6hr2GQSaz4k/Vak3-MY5zeI/AAAAAAAAjmk/UIfcib4fdBk/s1600/Hacker-free-Frequent-Flyer-Miles-United-Airlines.jpg" />
+        <div class="card-set__img-hover">NSA Releases Open Source Network Security Tool for Linux</div>
+      </div>
+      <ul class="card-set__list">
+        <li><a class="">Primeiro Nome</a></li>
+        <li><a class="">Primeiro Nome</a></li>
+        <li><a class="">Primeiro Nome</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="profile-edit__wrapper">
+    <div class="profile-edit__side">
+      <ul class="list-group">
+        <li>Primeiro Item</li>
+        <li>Primeiro Item</li>
+        <li>Primeiro Item</li>
+      </ul>
+    </div>
+    <div class="profile-edit__content">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">Danger Panel</h4>
+        </div>
+        <div class="panel-body">
+            <form class="pi-form">
+                <div class="pi-form__group">
+                  <label>O Primeiro Nome</label>
+                  <input type="text" class="pi-form__control" placeholder="Primeiro Nome" />
+                </div>
+                <div class="pi-form__group">
+                  <label>O Primeiro Nome</label>
+                  <input type="text" class="pi-form__control" placeholder="Primeiro Nome" />
+                </div>
+                <div class="pi-form__group">
+                  <label>O Primeiro Nome</label>
+                  <input type="text" class="pi-form__control" placeholder="Primeiro Nome" />
+                </div>
+                <div class="pi-form__groups">
+                  <div class="pi-form__group">
+                    <label>O Primeiro Nome</label>
+                    <input type="text" class="pi-form__control" placeholder="Primeiro Nome" />
+                  </div>
+                  <div class="pi-form__group">
+                    <label>O Primeiro Nome</label>
+                    <input type="text" class="pi-form__control" placeholder="Primeiro Nome" />
+                  </div>
+                </div>
+                <div class="pi-form__footer">
+                  <button type="button" class="button-primary">Guardar Alteraçes</button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  <button class="button-primary button-block">Add Sections</button>
+  <div class="card-set__wrapper">
+      <div class="card-set" ng-repeat="counter in $root.events track by $index">
+        <div class="card-set__img"><img src="http://beta.fitting.pt/uploads/user/default.jpg" /></div>
+        <div class="card-set__list">
+          <div class="card-set__list-avatar"><img src="http://beta.fitting.pt/uploads/user/default.jpg" /></div>
+          <div class="card-set__content">Louos Pasdasd</div>
+      </div>
+      <div class="card-set__author">
+          <div class="card-set__author-avatar"><img src="http://beta.fitting.pt/uploads/user/default.jpg" /></div>
+          <div class="card-set__author-likes">178</div>
+      </div>
+    </div>
+  </div>
+  <div class="pi-footer__wrapper">
+
+  </div>-->
+</body>
+</html>
