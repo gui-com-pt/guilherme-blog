@@ -286,27 +286,3 @@ class DemoHost extends AppHost {
 
 $host = new DemoHost();
 $host->init();
-
-/*
-require_once '../server/bootstrap.php';
-$configs = include('../conf/local.settings.php');
-$pi = new \Volupio\Pi($configs);
-$pi->app->add(new \CorsSlim\CorsSlim());
-
-//\Weedi\ApplicationProvider::initialize($pi);
-\Fitting\Infrastructure\ApplicationProvider::initialize($pi);
-
-
-$ioc = $pi->container;
-
-$pi->app->get('.*', function() {
-    include('index.html');
-});
-
-$pi->app->error(function(){
-    echo json_encode(array('message' => _('InternalServerError'), 'code' => 'InternalServerError'));
-    die;
-});
-
-$pi->app->run();
-*/
