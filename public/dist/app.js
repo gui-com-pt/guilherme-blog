@@ -78,23 +78,21 @@ var boot = function(){
         if(_.isString(getCookie('Authorization'))){
           var c = getCookie('Authorization');
           if(_.isString(c) && c.length > 4) {
-              //var cookie = JSON.parse(decodeURIComponent(c));
-              //if(!_.isUndefined(cookie.token))
-                  $httpProvider.defaults.headers.common["WWW-Authenticate"] = 'Basic ' + c;
+            $httpProvider.defaults.headers.common["WWW-Authenticate"] = 'Basic ' + c;
           }
-
-      }
-          tagsInputConfigProvider
-            .setDefaults('tagsInput', {
-              placeholder: 'Nova Tag',
-              minLength: 5,
-              addOnEnter: false
-            })
-            .setDefaults('autoComplete', {
-              debounceDelay: 200,
-              loadOnDownArrow: true,
-              loadOnEmpty: true
-            })
+        }
+        
+        tagsInputConfigProvider
+          .setDefaults('tagsInput', {
+            placeholder: 'Nova Tag',
+            minLength: 5,
+            addOnEnter: false
+          })
+          .setDefaults('autoComplete', {
+            debounceDelay: 200,
+            loadOnDownArrow: true,
+            loadOnEmpty: true
+          });
 
 
           uiSelectConfig.theme = 'selectize';
