@@ -135,6 +135,26 @@ var boot = function(){
                   controller: 'codigo.core.homeCtrl',
                   controllerAs: 'ctrl'
               })
+              .state('server-side', {
+                url: '/server-side',
+                templateUrl: 'core/server-side.tpl.html'
+              })
+              .state('client-side', {
+                url: '/client-side',
+                templateUrl: 'core/client-side.tpl.html'
+              })
+              .state('php', {
+                url: '/php',
+                templateUrl: 'core/php-hhvm.tpl.html'
+              })
+              .state('csharp', {
+                url: '/csharp',
+                templateUrl: 'core/csharp.tpl.html'
+              })
+              .state('sysadmin', {
+                url: '/sysadmin',
+                templateUrl: 'core/sysadmin.tpl.html'
+              })
               .state('learn', {
                 url: '/aprende-comigo',
                 templateUrl: 'core/learn.tpl.html',
