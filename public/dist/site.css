@@ -5439,3 +5439,11 @@ button, input[type="button"] {
   color: #8d8f9c; }
   .pi-breadcrumb a:hover, .pi-breadcrumb button:hover, .pi-breadcrumb .button-primary:hover {
     background-color: transparent; }
+
+.home-intro {
+  background-color: #cccccc;
+  padding: 20px; }
+
+ul {
+  list-style: none;
+  margin-bottom: 20px; }
