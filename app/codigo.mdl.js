@@ -71,7 +71,7 @@ var boot = function(){
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');
         facebookMetaServiceProvider.setSiteName('Codigo');
         facebookMetaServiceProvider.setType('article');
-        facebookMetaServiceProvider.setLocale('pt_PT');
+        facebookMetaServiceProvider.setLocale('en_US');
         $locationProvider.hashPrefix('!');
         //$locationProvider.html5Mode(true);
 

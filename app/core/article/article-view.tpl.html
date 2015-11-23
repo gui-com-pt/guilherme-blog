@@ -2,8 +2,7 @@
     <div class="page-view__side">
         <img ng-src="{{ctrl.sportsNews.image}}" />
         <ul class="pi-list">
-            <li><i class="icon ion-android-calendar"></i> Criado <span am-time-ago="ctrl.sportsNews.datePublished | amFromUnix"></span></li>
-            <li><i class="icon ion-person"></i> Por <span ng-bind="ctrl.sportsNews.author.displayName"></span></li>
+            <li>Created <span am-time-ago="ctrl.sportsNews.datePublished | amFromUnix"></span></li>
         </ul>
         <ul ng-show="ctrl.sportsNews.meta.length > 0">
             <li ng-repeat="meta in ctrl.sportsNews.meta"><b ng-bind="meta.displayName"></b><br><span ng-bind="meta.value"></span></li>
