@@ -161,6 +161,10 @@ var boot = function(){
                 controller: 'codigo.core.learnCtrl',
                 controllerAs: 'ctrl'
               })
+              .state('cv', {
+                url: '/curriculum-viate',
+                templateUrl: 'core/cv.tpl.html'
+              })
               .state('login', {
                 url: '/login',
                 templateUrl: 'core/login.tpl.html',
@@ -242,10 +246,15 @@ var boot = function(){
           $rootScope.search = function(value) {
             $state.go('article-list', {name: value, categoryId: null});
           }
+          var categories;
+
           categorySvc.find()
-        .then(function(res){
-          $rootScope.categories = res.data.categories;
-        });
+            .then(function(res){
+              categories = res.data.categories;
+            });
+          $rootScope.categories = function() {
+            return categories;
+          }
     }])
     .directive('googleAdSense', function () {
         return {

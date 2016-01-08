@@ -8371,1285 +8371,13 @@ angular.module('ngResource', ['ng']).
 
 })(window, window.angular);
 
-/**
- * Restful Resources service for AngularJS apps
- * @version v1.3.1 - 2014-01-29 * @link https://github.com/mgonto/restangular
- * @author Martin Gontovnikas <martin@gon.to>
- * @license MIT License, http://www.opensource.org/licenses/MIT
- */(function() {
-
-var module = angular.module('restangular', []);
-
-module.provider('Restangular', function() {
-        // Configuration
-        var Configurer = {};
-        Configurer.init = function(object, config) {
-            /**
-             * Those are HTTP safe methods for which there is no need to pass any data with the request.
-             */
-
-            object.configuration = config;
-
-            var safeMethods= ["get", "head", "options", "trace", "getlist"];
-            config.isSafe = function(operation) {
-              return _.contains(safeMethods, operation.toLowerCase());
-            };
-
-            var absolutePattern = /^https?:\/\//i;
-            config.isAbsoluteUrl = function(string) {
-              return _.isUndefined(config.absoluteUrl) || _.isNull(config.absoluteUrl) ? 
-                      string && absolutePattern.test(string) :
-                      config.absoluteUrl;
-            };
-            
-            config.absoluteUrl = _.isUndefined(config.absoluteUrl) ? false : true;
-            object.setSelfLinkAbsoluteUrl = function(value) {
-                config.absoluteUrl = value;
-            };
-            /**
-             * This is the BaseURL to be used with Restangular
-             */
-            config.baseUrl = _.isUndefined(config.baseUrl) ? "" : config.baseUrl;
-            object.setBaseUrl = function(newBaseUrl) {
-                config.baseUrl = /\/$/.test(newBaseUrl)
-                  ? newBaseUrl.substring(0, newBaseUrl.length-1)
-                  : newBaseUrl;
-                return this;
-            };
-
-            /**
-             * Sets the extra fields to keep from the parents
-             */
-            config.extraFields = config.extraFields || [];
-            object.setExtraFields = function(newExtraFields) {
-              config.extraFields = newExtraFields;
-              return this;
-            };
-
-            /**
-             * Some default $http parameter to be used in EVERY call
-            **/
-            config.defaultHttpFields = config.defaultHttpFields || {};
-            object.setDefaultHttpFields = function(values) {
-              config.defaultHttpFields = values;
-              return this;
-            };
-
-            config.withHttpValues = function(httpLocalConfig, obj) {
-              return _.defaults(obj, httpLocalConfig, config.defaultHttpFields);
-            };
-
-            config.encodeIds = _.isUndefined(config.encodeIds) ? true : config.encodeIds;
-            object.setEncodeIds = function(encode) {
-                config.encodeIds = encode;
-            };
-
-            config.defaultRequestParams = config.defaultRequestParams || {
-                get: {},
-                post: {},
-                put: {},
-                remove: {},
-                common: {}
-            };
-
-            object.setDefaultRequestParams = function(param1, param2) {
-              var methods = [],
-                  params = param2 || param1;
-              if (!_.isUndefined(param2)) {
-                if (_.isArray(param1)) {
-                  methods = param1;
-                } else {
-                  methods.push(param1);
-                }
-              } else {
-                methods.push('common');
-              }
-
-              _.each(methods, function (method) {
-                config.defaultRequestParams[method] = params;
-              });
-              return this;
-            };
-
-            object.requestParams = config.defaultRequestParams;
-
-
-            config.defaultHeaders = config.defaultHeaders || {};
-            object.setDefaultHeaders = function(headers) {
-              config.defaultHeaders = headers;
-              object.defaultHeaders = config.defaultHeaders;
-              return this;
-            };
-
-            object.defaultHeaders = config.defaultHeaders;
-
-            /**
-             * Method overriders will set which methods are sent via POST with an X-HTTP-Method-Override
-             **/
-            config.methodOverriders = config.methodOverriders || [];
-            object.setMethodOverriders = function(values) {
-              var overriders = _.extend([], values);
-              if (config.isOverridenMethod('delete', overriders)) {
-                overriders.push("remove");
-              }
-              config.methodOverriders = overriders;
-              return this;
-            };
-
-            config.jsonp = _.isUndefined(config.jsonp) ? false : config.jsonp;
-            object.setJsonp = function(active) {
-              config.jsonp = active;
-            };
-
-            config.isOverridenMethod = function(method, values) {
-              var search = values || config.methodOverriders;
-              return !_.isUndefined(_.find(search, function(one) {
-                return one.toLowerCase() === method.toLowerCase();
-              }));
-            };
-
-            /**
-             * Sets the URL creator type. For now, only Path is created. In the future we'll have queryParams
-            **/
-            config.urlCreator = config.urlCreator || "path";
-            object.setUrlCreator = function(name) {
-              if (!_.has(config.urlCreatorFactory, name)) {
-                  throw new Error("URL Path selected isn't valid");
-              }
-
-              config.urlCreator = name;
-              return this;
-            };
-
-            /**
-             * You can set the restangular fields here. The 3 required fields for Restangular are:
-             *
-             * id: Id of the element
-             * route: name of the route of this element
-             * parentResource: the reference to the parent resource
-             *
-             *  All of this fields except for id, are handled (and created) by Restangular. By default,
-             *  the field values will be id, route and parentResource respectively
-             */
-            config.restangularFields = config.restangularFields || {
-                id: "id",
-                route: "route",
-                parentResource: "parentResource",
-                restangularCollection: "restangularCollection",
-                cannonicalId: "__cannonicalId",
-                etag: "restangularEtag",
-                selfLink: "href",
-                get: "get",
-                getList: "getList",
-                put: "put",
-                post: "post",
-                remove: "remove",
-                head: "head",
-                trace: "trace",
-                options: "options",
-                patch: "patch",
-                getRestangularUrl: "getRestangularUrl",
-                getRequestedUrl: "getRequestedUrl",
-                putElement: "putElement",
-                addRestangularMethod: "addRestangularMethod",
-                getParentList: "getParentList",
-                clone: "clone",
-                ids: "ids",
-                httpConfig: '_$httpConfig',
-                reqParams: 'reqParams',
-                one: 'one',
-                all: 'all',
-                several: 'several',
-                oneUrl: 'oneUrl',
-                allUrl: 'allUrl',
-                customPUT: 'customPUT',
-                customPOST: 'customPOST',
-                customDELETE: 'customDELETE',
-                customGET: 'customGET',
-                customGETLIST: 'customGETLIST',
-                customOperation: 'customOperation',
-                doPUT: 'doPUT',
-                doPOST: 'doPOST',
-                doDELETE: 'doDELETE',
-                doGET: 'doGET',
-                doGETLIST: 'doGETLIST',
-                fromServer: '$fromServer',
-                withConfig: 'withConfig',
-                withHttpConfig: 'withHttpConfig'
-            };
-            object.setRestangularFields = function(resFields) {
-                config.restangularFields =
-                  _.extend(config.restangularFields, resFields);
-                return this;
-            };
-
-            config.isRestangularized = function(obj) {
-              return !!obj[config.restangularFields.one] || !!obj[config.restangularFields.all];
-            };
-
-            config.setFieldToElem = function(field, elem, value) {
-              var properties = field.split('.');
-              var idValue = elem;
-              _.each(_.initial(properties), function(prop) {
-                idValue[prop] = {};
-                idValue = idValue[prop];
-              });
-              idValue[_.last(properties)] = value;
-              return this;
-            };
-
-            config.getFieldFromElem = function(field, elem) {
-              var properties = field.split('.');
-              var idValue = elem;
-              _.each(properties, function(prop) {
-                if (idValue) {
-                  idValue = idValue[prop];
-                }
-              });
-              return angular.copy(idValue);
-            };
-
-            config.setIdToElem = function(elem, id) {
-              config.setFieldToElem(config.restangularFields.id, elem, id);
-              return this;
-            };
-
-            config.getIdFromElem = function(elem) {
-              return config.getFieldFromElem(config.restangularFields.id, elem);
-            };
-
-            config.isValidId = function(elemId) {
-                return "" !== elemId && !_.isUndefined(elemId) && !_.isNull(elemId);
-            };
-
-            config.setUrlToElem = function(elem, url) {
-              config.setFieldToElem(config.restangularFields.selfLink, elem, url);
-              return this;
-            };
-
-            config.getUrlFromElem = function(elem) {
-              return config.getFieldFromElem(config.restangularFields.selfLink, elem);
-            };
-
-            config.useCannonicalId = _.isUndefined(config.useCannonicalId) ? false : config.useCannonicalId;
-            object.setUseCannonicalId = function(value) {
-                config.useCannonicalId = value;
-                return this;
-            };
-
-            config.getCannonicalIdFromElem = function(elem) {
-              var cannonicalId = elem[config.restangularFields.cannonicalId];
-              var actualId = config.isValidId(cannonicalId) ?
-                  cannonicalId : config.getIdFromElem(elem);
-              return actualId;
-            };
-
-            /**
-             * Sets the Response parser. This is used in case your response isn't directly the data.
-             * For example if you have a response like {meta: {'meta'}, data: {name: 'Gonto'}}
-             * you can extract this data which is the one that needs wrapping
-             *
-             * The ResponseExtractor is a function that receives the response and the method executed.
-             */
-
-            config.responseInterceptors = config.responseInterceptors || [];
-
-            config.defaultResponseInterceptor = function(data, operation,
-                    what, url, response, deferred) {
-                return data;
-            };
-
-            config.responseExtractor = function(data, operation,
-                    what, url, response, deferred) {
-                var interceptors = angular.copy(config.responseInterceptors);
-                interceptors.push(config.defaultResponseInterceptor);
-                var theData = data;
-                _.each(interceptors, function(interceptor) {
-                  theData = interceptor(theData, operation,
-                    what, url, response, deferred);
-                });
-                return theData;
-            };
-
-            object.addResponseInterceptor = function(extractor) {
-              config.responseInterceptors.push(extractor);
-              return this;
-            };
-
-            object.setResponseInterceptor = object.addResponseInterceptor;
-            object.setResponseExtractor = object.addResponseInterceptor;
-
-            /**
-             * Response interceptor is called just before resolving promises.
-             */
-
-
-            /**
-             * Request interceptor is called before sending an object to the server.
-             */
-             config.requestInterceptors = config.requestInterceptors || [];
-
-             config.defaultInterceptor = function(element, operation,
-              path, url, headers, params, httpConfig) {
-                return {
-                  element: element,
-                  headers: headers,
-                  params: params,
-                  httpConfig: httpConfig
-                };
-              };
-
-            config.fullRequestInterceptor = function(element, operation,
-              path, url, headers, params, httpConfig) {
-                var interceptors = angular.copy(config.requestInterceptors);
-                interceptors.push(config.defaultInterceptor);
-                return _.reduce(interceptors, function(request, interceptor) {
-                  return _.defaults(request, interceptor(element, operation,
-                    path, url, headers, params, httpConfig));
-                }, {});
-            };
-
-            object.addRequestInterceptor = function(interceptor) {
-              config.requestInterceptors.push(function(elem, operation, path, url, headers, params, httpConfig) {
-                return {
-                  headers: headers,
-                  params: params,
-                  element: interceptor(elem, operation, path, url),
-                  httpConfig: httpConfig
-                };
-              });
-              return this;
-            };
-
-            object.setRequestInterceptor = object.addRequestInterceptor;
-
-            object.addFullRequestInterceptor = function(interceptor) {
-              config.requestInterceptors.push(interceptor);
-              return this;
-            };
-
-            object.setFullRequestInterceptor = object.addFullRequestInterceptor;
-
-            config.errorInterceptor = config.errorInterceptor || function() {};
-
-            object.setErrorInterceptor = function(interceptor) {
-              config.errorInterceptor = interceptor;
-              return this;
-            };
-
-            config.onBeforeElemRestangularized = config.onBeforeElemRestangularized || function(elem) {
-              return elem;
-            };
-            object.setOnBeforeElemRestangularized = function(post) {
-              config.onBeforeElemRestangularized = post;
-              return this;
-            };
-
-            /**
-             * This method is called after an element has been "Restangularized".
-             *
-             * It receives the element, a boolean indicating if it's an element or a collection
-             * and the name of the model
-             *
-             */
-            config.onElemRestangularized = config.onElemRestangularized || function(elem) {
-              return elem;
-            };
-            object.setOnElemRestangularized = function(post) {
-              config.onElemRestangularized = post;
-              return this;
-            };
-
-            config.shouldSaveParent = config.shouldSaveParent || function() {
-                return true;
-            };
-            object.setParentless = function(values) {
-                if (_.isArray(values)) {
-                    config.shouldSaveParent = function(route) {
-                        return !_.contains(values, route);
-                    };
-                } else if (_.isBoolean(values)) {
-                    config.shouldSaveParent = function() {
-                        return !values;
-                    };
-                }
-                return this;
-            };
-
-            /**
-             * This lets you set a suffix to every request.
-             *
-             * For example, if your api requires that for JSon requests you do /users/123.json, you can set that
-             * in here.
-             *
-             *
-             * By default, the suffix is null
-             */
-            config.suffix = _.isUndefined(config.suffix) ? null : config.suffix;
-            object.setRequestSuffix = function(newSuffix) {
-                config.suffix = newSuffix;
-                return this;
-            };
-
-            /**
-             * Add element transformers for certain routes.
-             */
-            config.transformers = config.transformers || {};
-            object.addElementTransformer = function(type, secondArg, thirdArg) {
-                var isCollection = null;
-                var transformer = null;
-                if (arguments.length === 2) {
-                    transformer = secondArg;
-                } else {
-                    transformer = thirdArg;
-                    isCollection = secondArg;
-                }
-
-                var typeTransformers = config.transformers[type];
-                if (!typeTransformers) {
-                    typeTransformers = config.transformers[type] = [];
-                }
-
-                typeTransformers.push(function(coll, elem) {
-                    if (_.isNull(isCollection) || (coll == isCollection)) {
-                        return transformer(elem);
-                    }
-                    return elem;
-                });
-            };
-
-            object.extendCollection = function(route, fn) {
-              return object.addElementTransformer(route, true, fn);
-            };
-
-            object.extendModel = function(route, fn) {
-              return object.addElementTransformer(route, false, fn);
-            };
-
-            config.transformElem = function(elem, isCollection, route, Restangular) {
-                if (!config.transformLocalElements && !elem[config.restangularFields.fromServer]) {
-                  return elem;
-                }
-                var typeTransformers = config.transformers[route];
-                var changedElem = elem;
-                if (typeTransformers) {
-                    _.each(typeTransformers, function(transformer) {
-                       changedElem = transformer(isCollection, changedElem);
-                    });
-                }
-                return config.onElemRestangularized(changedElem,
-                  isCollection, route, Restangular);
-            };
-
-            config.transformLocalElements = _.isUndefined(config.transformLocalElements) ? true : config.transformLocalElements;
-            object.setTransformOnlyServerElements = function(active) {
-              config.transformLocalElements = !active;
-            }
-
-            config.fullResponse = _.isUndefined(config.fullResponse) ? false : config.fullResponse;
-            object.setFullResponse = function(full) {
-                config.fullResponse = full;
-                return this;
-            };
-
-            
-
-
-
-            //Internal values and functions
-            config.urlCreatorFactory = {};
-
-            /**
-             * Base URL Creator. Base prototype for everything related to it
-             **/
-
-             var BaseCreator = function() {
-             };
-
-             BaseCreator.prototype.setConfig = function(config) {
-                 this.config = config;
-                 return this;
-             };
-
-             BaseCreator.prototype.parentsArray = function(current) {
-                var parents = [];
-                while(current) {
-                    parents.push(current);
-                    current = current[this.config.restangularFields.parentResource];
-                }
-                return parents.reverse();
-            };
-
-            function RestangularResource(config, $http, url, configurer) {
-              var resource = {};
-              _.each(_.keys(configurer), function(key) {
-                  var value = configurer[key];
-
-                  // Add default parameters
-                  value.params = _.extend({}, value.params,
-                          config.defaultRequestParams[value.method.toLowerCase()]);
-                  // We don't want the ? if no params are there
-                  if (_.isEmpty(value.params)) {
-                    delete value.params;
-                  }
-
-                  if (config.isSafe(value.method)) {
-
-                      resource[key] = function() {
-                          return $http(_.extend(value, {
-                              url: url
-                          }));
-                      };
-
-                  } else {
-
-                      resource[key] = function(data) {
-                          return $http(_.extend(value, {
-                              url: url,
-                              data: data
-                          }));
-                      };
-
-                  }
-              });
-
-              return resource;
-            }
-
-            BaseCreator.prototype.resource = function(current, $http, localHttpConfig, callHeaders, callParams, what, etag, operation) {
-
-                var params = _.defaults(callParams || {}, this.config.defaultRequestParams.common);
-                var headers = _.defaults(callHeaders || {}, this.config.defaultHeaders);
-
-                if (etag) {
-                    if (!config.isSafe(operation)) {
-                      headers['If-Match'] = etag;
-                    } else {
-                      headers['If-None-Match'] = etag;
-                    }
-                }
-
-                var url = this.base(current);
-
-                if (what) {
-                  var add = '';
-                  if (!/\/$/.test(url)) {
-                    add += '/';
-                  }
-                  add += what;
-                  url += add;
-                }
-
-                if (this.config.suffix
-                  && url.indexOf(this.config.suffix, url.length - this.config.suffix.length) === -1
-                  && !this.config.getUrlFromElem(current)) {
-                    url += this.config.suffix;
-                }
-
-                current[this.config.restangularFields.httpConfig] = undefined;
-
-
-                return RestangularResource(this.config, $http, url, {
-                    getList: this.config.withHttpValues(localHttpConfig,
-                      {method: 'GET',
-                      params: params,
-                      headers: headers}),
-
-                    get: this.config.withHttpValues(localHttpConfig,
-                      {method: 'GET',
-                      params: params,
-                      headers: headers}),
-
-                    jsonp: this.config.withHttpValues(localHttpConfig,
-                      {method: 'jsonp',
-                      params: params,
-                      headers: headers}),
-
-                    put: this.config.withHttpValues(localHttpConfig,
-                      {method: 'PUT',
-                      params: params,
-                      headers: headers}),
-
-                    post: this.config.withHttpValues(localHttpConfig,
-                      {method: 'POST',
-                      params: params,
-                      headers: headers}),
-
-                    remove: this.config.withHttpValues(localHttpConfig,
-                      {method: 'DELETE',
-                      params: params,
-                      headers: headers}),
-
-                    head: this.config.withHttpValues(localHttpConfig,
-                      {method: 'HEAD',
-                      params: params,
-                      headers: headers}),
-
-                    trace: this.config.withHttpValues(localHttpConfig,
-                      {method: 'TRACE',
-                      params: params,
-                      headers: headers}),
-
-                    options: this.config.withHttpValues(localHttpConfig,
-                      {method: 'OPTIONS',
-                      params: params,
-                      headers: headers}),
-
-                    patch: this.config.withHttpValues(localHttpConfig,
-                      {method: 'PATCH',
-                      params: params,
-                      headers: headers})
-                });
-            };
-
-            /**
-             * This is the Path URL creator. It uses Path to show Hierarchy in the Rest API.
-             * This means that if you have an Account that then has a set of Buildings, a URL to a building
-             * would be /accounts/123/buildings/456
-            **/
-            var Path = function() {
-            };
-
-            Path.prototype = new BaseCreator();
-
-            Path.prototype.base = function(current) {
-                var __this = this;
-                return  _.reduce(this.parentsArray(current), function(acum, elem) {
-                    var elemUrl;
-                    var elemSelfLink = __this.config.getUrlFromElem(elem);
-                    if (elemSelfLink) {
-                      if (__this.config.isAbsoluteUrl(elemSelfLink)) {
-                        return elemSelfLink;
-                      } else {
-                        elemUrl = elemSelfLink;
-                      }
-                    } else {
-                      elemUrl = elem[__this.config.restangularFields.route];
-
-                      if (elem[__this.config.restangularFields.restangularCollection]) {
-                        var ids = elem[__this.config.restangularFields.ids];
-                        if (ids) {
-                          elemUrl += "/" + ids.join(",");
-                        }
-                      } else {
-                          var elemId;
-                          if (__this.config.useCannonicalId) {
-                              elemId = __this.config.getCannonicalIdFromElem(elem);
-                          } else {
-                              elemId = __this.config.getIdFromElem(elem);
-                          }
-
-                          if (config.isValidId(elemId)) {
-                              elemUrl += "/" + (__this.config.encodeIds ? encodeURIComponent(elemId) : elemId);
-                          }
-                      }
-                    }
-
-                    return acum.replace(/\/$/, "") + "/" + elemUrl;
-
-                }, this.config.baseUrl);
-            };
-
-
-
-            Path.prototype.fetchUrl = function(current, what) {
-                var baseUrl = this.base(current);
-                if (what) {
-                    baseUrl += "/" + what;
-                }
-                return baseUrl;
-            };
-
-            Path.prototype.fetchRequestedUrl = function(current, what) {
-                var url = this.fetchUrl(current, what);
-                var params = current[config.restangularFields.reqParams];
-
-                // From here on and until the end of fetchRequestedUrl,
-                // the code has been kindly borrowed from angular.js
-                // The reason for such code bloating is coherence:
-                //   If the user were to use this for cache management, the
-                //   serialization of parameters would need to be identical
-                //   to the one done by angular for cache keys to match.
-                function sortedKeys(obj) {
-                  var keys = [];
-                  for (var key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                      keys.push(key);
-                    }
-                  }
-                  return keys.sort();
-                }
-
-                function forEachSorted(obj, iterator, context) {
-                  var keys = sortedKeys(obj);
-                  for ( var i = 0; i < keys.length; i++) {
-                    iterator.call(context, obj[keys[i]], keys[i]);
-                  }
-                  return keys;
-                }
-
-                function encodeUriQuery(val, pctEncodeSpaces) {
-                  return encodeURIComponent(val).
-                             replace(/%40/gi, '@').
-                             replace(/%3A/gi, ':').
-                             replace(/%24/g, '$').
-                             replace(/%2C/gi, ',').
-                             replace(/%20/g, (pctEncodeSpaces ? '%20' : '+'));
-                }
-
-                if (!params) return url;
-                var parts = [];
-                forEachSorted(params, function(value, key) {
-                  if (value == null || value == undefined) return;
-                  if (!angular.isArray(value)) value = [value];
-
-                  angular.forEach(value, function(v) {
-                    if (angular.isObject(v)) {
-                      v = angular.toJson(v);
-                    }
-                    parts.push(encodeUriQuery(key) + '=' +
-                               encodeUriQuery(v));
-                  });
-                });
-                return url + (this.config.suffix || '') + ((url.indexOf('?') === -1) ? '?' : '&') + parts.join('&');
-            };
-
-
-
-            config.urlCreatorFactory.path = Path;
-
-        };
-
-        var globalConfiguration = {};
-
-        Configurer.init(this, globalConfiguration);
-
-
-
-
-       this.$get = ['$http', '$q', function($http, $q) {
-
-          function createServiceForConfiguration(config) {
-              var service = {};
-
-              var urlHandler = new config.urlCreatorFactory[config.urlCreator]();
-              urlHandler.setConfig(config);
-
-              function restangularizeBase(parent, elem, route, reqParams, fromServer) {
-                  elem[config.restangularFields.route] = route;
-                  elem[config.restangularFields.getRestangularUrl] = _.bind(urlHandler.fetchUrl, urlHandler, elem);
-                  elem[config.restangularFields.getRequestedUrl] = _.bind(urlHandler.fetchRequestedUrl, urlHandler, elem);
-                  elem[config.restangularFields.addRestangularMethod] = _.bind(addRestangularMethodFunction, elem);
-                  elem[config.restangularFields.clone] = _.bind(copyRestangularizedElement, elem, elem);
-                  elem[config.restangularFields.reqParams] = _.isEmpty(reqParams) ? null : reqParams;
-                  elem[config.restangularFields.withHttpConfig] = _.bind(withHttpConfig, elem);
-
-                  // RequestLess connection
-                  elem[config.restangularFields.one] = _.bind(one, elem, elem);
-                  elem[config.restangularFields.all] = _.bind(all, elem, elem);
-                  elem[config.restangularFields.several] = _.bind(several, elem, elem);
-                  elem[config.restangularFields.oneUrl] = _.bind(oneUrl, elem, elem);
-                  elem[config.restangularFields.allUrl] = _.bind(allUrl, elem, elem);
-
-                  elem[config.restangularFields.fromServer] = !!fromServer;
-
-                  if (parent && config.shouldSaveParent(route)) {
-                      var parentId = config.getIdFromElem(parent);
-                      var parentUrl = config.getUrlFromElem(parent);
-
-                      var restangularFieldsForParent = _.union(
-                        _.values( _.pick(config.restangularFields, ['route', 'parentResource']) ),
-                        config.extraFields
-                      );
-                      var parentResource = _.pick(parent, restangularFieldsForParent);
-
-                      if (config.isValidId(parentId)) {
-                          config.setIdToElem(parentResource, parentId);
-                      }
-                      if (config.isValidId(parentUrl)) {
-                          config.setUrlToElem(parentResource, parentUrl);
-                      }
-
-                      elem[config.restangularFields.parentResource] = parentResource;
-                  } else {
-                    elem[config.restangularFields.parentResource] = null;
-                  }
-                  return elem;
-              }
-
-
-
-              function one(parent, route, id) {
-                  if (_.isNumber(route) || _.isNumber(parent)) {
-                    var error = "You're creating a Restangular entity with the number "
-                    error += "instead of the route or the parent. You can't call .one(12)";
-                    throw new Error(error);
-                  }
-                  var elem = {};
-                  config.setIdToElem(elem, id);
-                  return restangularizeElem(parent, elem , route, false);
-              }
-
-
-              function all(parent, route) {
-                  return restangularizeCollection(parent, [] , route, false);
-              }
-
-              function several(parent, route, ids) {
-                var collection = [];
-                collection[config.restangularFields.ids] =
-                  Array.prototype.splice.call(arguments, 2);
-                return restangularizeCollection(parent, collection , route, false);
-              }
-
-              function oneUrl(parent, route, url) {
-                  if (!route) {
-                    throw new Error("Route is mandatory when creating new Restangular objects.");
-                  }
-                  var elem = {};
-                  config.setUrlToElem(elem, url);
-                  return restangularizeElem(parent, elem , route, false);
-              }
-
-
-              function allUrl(parent, route, url) {
-                  if (!route) {
-                    throw new Error("Route is mandatory when creating new Restangular objects.");
-                  }
-                  var elem = {};
-                  config.setUrlToElem(elem, url);
-                  return restangularizeCollection(parent, elem , route, false);
-              }
-              // Promises
-              function restangularizePromise(promise, isCollection, valueToFill) {
-                  promise.call = _.bind(promiseCall, promise);
-                  promise.get = _.bind(promiseGet, promise);
-                  promise[config.restangularFields.restangularCollection] = isCollection;
-                  if (isCollection) {
-                      promise.push = _.bind(promiseCall, promise, "push");
-                  }
-                  promise.$object = valueToFill;
-                  return promise;
-              }
-
-              function promiseCall(method) {
-                  var deferred = $q.defer();
-                  var callArgs = arguments;
-                  var filledValue = {};
-                  this.then(function(val) {
-                      var params = Array.prototype.slice.call(callArgs, 1);
-                      var func = val[method];
-                      func.apply(val, params);
-                      filledValue = val;
-                      deferred.resolve(val);
-                  });
-                  return restangularizePromise(deferred.promise, this[config.restangularFields.restangularCollection], filledValue);
-              }
-
-              function promiseGet(what) {
-                  var deferred = $q.defer();
-                  var filledValue = {};
-                  this.then(function(val) {
-                      filledValue = val[what];
-                      deferred.resolve(filledValue);
-                  });
-                  return restangularizePromise(deferred.promise, this[config.restangularFields.restangularCollection], filledValue);
-              }
-
-              function resolvePromise(deferred, response, data, filledValue) {
-
-                _.extend(filledValue, data);
-                
-                // Trigger the full response interceptor.
-                if (config.fullResponse) {
-                  return deferred.resolve(_.extend(response, {
-                    data: data
-                  }));
-                } else {
-                  deferred.resolve(data);
-                }
-              }
-
-
-              // Elements
-
-              function stripRestangular(elem) {
-                if (_.isArray(elem)) {
-                    var array = [];
-                    _.each(elem, function(value) {
-                        array.push(stripRestangular(value));
-                    });
-                    return array;
-                } else {
-                    return _.omit(elem, _.values(_.omit(config.restangularFields, 'id')));
-                }
-                        
-                        
-              }
-
-              function addCustomOperation(elem) {
-                  elem[config.restangularFields.customOperation] = _.bind(customFunction, elem);
-                  _.each(["put", "post", "get", "delete"], function(oper) {
-                      _.each(["do", "custom"], function(alias) {
-                          var callOperation = oper === 'delete' ? 'remove' : oper;
-                          var name = alias + oper.toUpperCase();
-                          var callFunction;
-
-                          if (callOperation !== 'put' && callOperation !== 'post') {
-                              callFunction = customFunction;
-                          } else {
-                              callFunction = function(operation, elem, path, params, headers) {
-                                return _.bind(customFunction, this)(operation, path, params, headers, elem);
-                              };
-                          }
-                          elem[name] = _.bind(callFunction, elem, callOperation);
-                      });
-                  });
-                  elem[config.restangularFields.customGETLIST] = _.bind(fetchFunction, elem);
-                  elem[config.restangularFields.doGETLIST] = elem[config.restangularFields.customGETLIST];
-              }
-
-              function copyRestangularizedElement(fromElement) {
-                  var copiedElement = angular.copy(fromElement);
-                  return restangularizeElem(copiedElement[config.restangularFields.parentResource],
-                          copiedElement, copiedElement[config.restangularFields.route], true);
-              }
-
-              function restangularizeElem(parent, element, route, fromServer, collection, reqParams) {
-                  var elem = config.onBeforeElemRestangularized(element, false, route);
-
-                  var localElem = restangularizeBase(parent, elem, route, reqParams, fromServer);
-
-                  if (config.useCannonicalId) {
-                      localElem[config.restangularFields.cannonicalId] = config.getIdFromElem(localElem);
-                  }
-
-                  if (collection) {
-                      localElem[config.restangularFields.getParentList] = function() {
-                          return collection;
-                      };
-                  }
-
-                  localElem[config.restangularFields.restangularCollection] = false;
-                  localElem[config.restangularFields.get] = _.bind(getFunction, localElem);
-                  localElem[config.restangularFields.getList] = _.bind(fetchFunction, localElem);
-                  localElem[config.restangularFields.put] = _.bind(putFunction, localElem);
-                  localElem[config.restangularFields.post] = _.bind(postFunction, localElem);
-                  localElem[config.restangularFields.remove] = _.bind(deleteFunction, localElem);
-                  localElem[config.restangularFields.head] = _.bind(headFunction, localElem);
-                  localElem[config.restangularFields.trace] = _.bind(traceFunction, localElem);
-                  localElem[config.restangularFields.options] = _.bind(optionsFunction, localElem);
-                  localElem[config.restangularFields.patch] = _.bind(patchFunction, localElem);
-
-                  addCustomOperation(localElem);
-                  return config.transformElem(localElem, false, route, service);
-              }
-
-              function restangularizeCollection(parent, element, route, fromServer, reqParams) {
-                  var elem = config.onBeforeElemRestangularized(element, true, route);
-
-                  var localElem = restangularizeBase(parent, elem, route, reqParams, fromServer);
-                  localElem[config.restangularFields.restangularCollection] = true;
-                  localElem[config.restangularFields.post] = _.bind(postFunction, localElem, null);
-                  localElem[config.restangularFields.remove] = _.bind(deleteFunction, localElem);
-                  localElem[config.restangularFields.head] = _.bind(headFunction, localElem);
-                  localElem[config.restangularFields.trace] = _.bind(traceFunction, localElem);
-                  localElem[config.restangularFields.putElement] = _.bind(putElementFunction, localElem);
-                  localElem[config.restangularFields.options] = _.bind(optionsFunction, localElem);
-                  localElem[config.restangularFields.patch] = _.bind(patchFunction, localElem);
-                  localElem[config.restangularFields.get] = _.bind(getById, localElem);
-                  localElem[config.restangularFields.getList] = _.bind(fetchFunction, localElem, null);
-
-                  addCustomOperation(localElem);
-                  return config.transformElem(localElem, true, route, service);
-              }
-
-              function restangularizeCollectionAndElements(parent, element, route) {
-                var collection = restangularizeCollection(parent, element, route, false);
-                _.each(collection, function(elem) {
-                  restangularizeElem(parent, elem, route, false);
-                });
-                return collection;
-              }
-
-              function getById(id, reqParams, headers){
-                  return this.customGET(id.toString(), reqParams, headers);
-              }
-
-              function putElementFunction(idx, params, headers) {
-                  var __this = this;
-                  var elemToPut = this[idx];
-                  var deferred = $q.defer();
-                  var filledArray = [];
-                  filledArray = config.transformElem(filledArray, true, whatFetched, service)
-                  elemToPut.put(params, headers).then(function(serverElem) {
-                      var newArray = copyRestangularizedElement(__this);
-                      newArray[idx] = serverElem;
-                      filledArray = newArray;
-                      deferred.resolve(newArray);
-                  }, function(response) {
-                      deferred.reject(response);
-                  });
-
-                  return restangularizePromise(deferred.promise, true, filledArray);
-              }
-
-              function parseResponse(resData, operation, route, fetchUrl, response, deferred) {
-                  var data = config.responseExtractor(resData, operation, route, fetchUrl, response, deferred);
-                  var etag = response.headers("ETag");
-                  if (data && etag) {
-                      data[config.restangularFields.etag] = etag;
-                  }
-                  return data;
-              }
-
-
-              function fetchFunction(what, reqParams, headers) {
-                  var __this = this;
-                  var deferred = $q.defer();
-                  var operation = 'getList';
-                  var url = urlHandler.fetchUrl(this, what);
-                  var whatFetched = what || __this[config.restangularFields.route];
-
-                  var request = config.fullRequestInterceptor(null, operation,
-                      whatFetched, url, headers || {}, reqParams || {}, this[config.restangularFields.httpConfig] || {});
-
-                  var filledArray = [];
-                  filledArray = config.transformElem(filledArray, true, whatFetched, service)
-
-                  var method = "getList";
-
-                  if (config.jsonp) {
-                    method = "jsonp";
-                  }
-
-                  urlHandler.resource(this, $http, request.httpConfig, request.headers, request.params, what,
-                          this[config.restangularFields.etag], operation)[method]().then(function(response) {
-                      var resData = response.data;
-                      var fullParams = response.config.params;
-                      var data = parseResponse(resData, operation, whatFetched, url, response, deferred);
-                      if (!_.isArray(data)) {
-                        throw new Error("Response for getList SHOULD be an array and not an object or something else");
-                      }
-                      var processedData = _.map(data, function(elem) {
-                          if (!__this[config.restangularFields.restangularCollection]) {
-                              return restangularizeElem(__this, elem, what, true, data);
-                          } else {
-                              return restangularizeElem(__this[config.restangularFields.parentResource],
-                                elem, __this[config.restangularFields.route], true, data);
-                          }
-
-                      });
-
-                      processedData = _.extend(data, processedData);
-
-                      if (!__this[config.restangularFields.restangularCollection]) {
-                          resolvePromise(deferred, response, restangularizeCollection(__this, processedData, what, true, fullParams), filledArray);
-                      } else {
-                          resolvePromise(deferred, response, restangularizeCollection(__this[config.restangularFields.parentResource], processedData, __this[config.restangularFields.route], true, fullParams), filledArray);
-                      }
-                  }, function error(response) {
-                      if (response.status === 304 && __this[config.restangularFields.restangularCollection]) {
-                        resolvePromise(deferred, response, __this, filledArray);
-                      } else if ( config.errorInterceptor(response, deferred) !== false ) {
-                          deferred.reject(response);
-                      }
-                  });
-
-                  return restangularizePromise(deferred.promise, true, filledArray);
-              }
-
-              function withHttpConfig(httpConfig) {
-                 this[config.restangularFields.httpConfig] = httpConfig;
-                 return this;
-              }
-
-              function elemFunction(operation, what, params, obj, headers) {
-                  var __this = this;
-                  var deferred = $q.defer();
-                  var resParams = params || {};
-                  var route = what || this[config.restangularFields.route];
-                  var fetchUrl = urlHandler.fetchUrl(this, what);
-
-                  var callObj = obj || this;
-                  // fallback to etag on restangular object (since for custom methods we probably don't explicitly specify the etag field)
-                  var etag = callObj[config.restangularFields.etag] || (operation != "post" ? this[config.restangularFields.etag] : null);
-
-                  if (_.isObject(callObj) && config.isRestangularized(callObj)) {
-                      callObj = stripRestangular(callObj);
-                  }
-                  var request = config.fullRequestInterceptor(callObj, operation, route, fetchUrl,
-                    headers || {}, resParams || {}, this[config.restangularFields.httpConfig] || {});
-
-                  var filledObject = {};
-                  filledObject = config.transformElem(filledObject, false, route, service);
-
-                  var okCallback = function(response) {
-                      var resData = response.data;
-                      var fullParams = response.config.params;
-                      var elem = parseResponse(resData, operation, route, fetchUrl, response, deferred);
-                      if (elem) {
-
-                        if (operation === "post" && !__this[config.restangularFields.restangularCollection]) {
-                          resolvePromise(deferred, response, restangularizeElem(__this, elem, what, true, null, fullParams), filledObject);
-                        } else {
-                          resolvePromise(deferred, response, restangularizeElem(__this[config.restangularFields.parentResource], elem, __this[config.restangularFields.route], true, null, fullParams), filledObject);
-                        }
-
-                      } else {
-                        resolvePromise(deferred, response, undefined, filledObject);
-                      }
-                  };
-
-                  var errorCallback = function(response) {
-                      if (response.status === 304 && config.isSafe(operation)) {
-                        resolvePromise(deferred, response, __this, filledObject);
-                      } else if ( config.errorInterceptor(response, deferred) !== false ) {
-                          deferred.reject(response);
-                      }
-                  };
-                  // Overring HTTP Method
-                  var callOperation = operation;
-                  var callHeaders = _.extend({}, request.headers);
-                  var isOverrideOperation = config.isOverridenMethod(operation);
-                  if (isOverrideOperation) {
-                    callOperation = 'post';
-                    callHeaders = _.extend(callHeaders, {'X-HTTP-Method-Override': operation === 'remove' ? 'DELETE' : operation});
-                  } else if (config.jsonp && callOperation === 'get') {
-                    callOperation = 'jsonp';
-                  }
-
-                  if (config.isSafe(operation)) {
-                    if (isOverrideOperation) {
-                      urlHandler.resource(this, $http, request.httpConfig, callHeaders, request.params,
-                        what, etag, callOperation)[callOperation]({}).then(okCallback, errorCallback);
-                    } else {
-                      urlHandler.resource(this, $http, request.httpConfig, callHeaders, request.params,
-                        what, etag, callOperation)[callOperation]().then(okCallback, errorCallback);
-                    }
-                  } else {
-                      urlHandler.resource(this, $http, request.httpConfig, callHeaders, request.params,
-                        what, etag, callOperation)[callOperation](request.element).then(okCallback, errorCallback);
-                  }
-
-                  return restangularizePromise(deferred.promise, false, filledObject);
-              }
-
-              function getFunction(params, headers) {
-                  return _.bind(elemFunction, this)("get", undefined, params, undefined, headers);
-              }
-
-              function deleteFunction(params, headers) {
-                  return _.bind(elemFunction, this)("remove", undefined, params, undefined, headers);
-              }
-
-              function putFunction(params, headers) {
-                  return _.bind(elemFunction, this)("put", undefined, params, undefined, headers);
-              }
-
-              function postFunction(what, elem, params, headers) {
-                  return _.bind(elemFunction, this)("post", what, params, elem, headers);
-              }
-
-             function headFunction(params, headers) {
-               return _.bind(elemFunction, this)("head", undefined, params, undefined, headers);
-             }
-
-             function traceFunction(params, headers) {
-               return _.bind(elemFunction, this)("trace", undefined, params, undefined, headers);
-             }
-
-             function optionsFunction(params, headers) {
-               return _.bind(elemFunction, this)("options", undefined, params, undefined, headers);
-             }
-
-             function patchFunction(elem, params, headers) {
-               return _.bind(elemFunction, this)("patch", undefined, params, elem, headers);
-             }
-
-             function customFunction(operation, path, params, headers, elem) {
-                 return _.bind(elemFunction, this)(operation, path, params, elem, headers);
-             }
-
-             function addRestangularMethodFunction(name, operation, path, defaultParams, defaultHeaders, defaultElem) {
-                 var bindedFunction;
-                 if (operation === 'getList') {
-                     bindedFunction = _.bind(fetchFunction, this, path);
-                 } else {
-                     bindedFunction = _.bind(customFunction, this, operation, path);
-                 }
-
-                 var createdFunction = function(params, headers, elem) {
-                     var callParams = _.defaults({
-                         params: params,
-                         headers: headers,
-                         elem: elem
-                     }, {
-                         params: defaultParams,
-                         headers: defaultHeaders,
-                         elem: defaultElem
-                     });
-                     return bindedFunction(callParams.params, callParams.headers, callParams.elem);
-                 };
-
-                 if (config.isSafe(operation)) {
-                     this[name] = createdFunction;
-                 } else {
-                     this[name] = function(elem, params, headers) {
-                         return createdFunction(params, headers, elem);
-                     };
-                 }
-
-             }
-
-             function withConfigurationFunction(configurer) {
-                 var newConfig = angular.copy(_.omit(config, 'configuration'));
-                 Configurer.init(newConfig, newConfig);
-                 configurer(newConfig);
-                 return createServiceForConfiguration(newConfig);
-             }
-
-
-              Configurer.init(service, config);
-
-              service.copy = _.bind(copyRestangularizedElement, service);
-
-              service.withConfig = _.bind(withConfigurationFunction, service);
-
-              service.one = _.bind(one, service, null);
-
-              service.all = _.bind(all, service, null);
-
-              service.several = _.bind(several, service, null);
-
-              service.oneUrl = _.bind(oneUrl, service, null);
-
-              service.allUrl = _.bind(allUrl, service, null);
-
-              service.stripRestangular = _.bind(stripRestangular, service);
-
-              service.restangularizeElement = _.bind(restangularizeElem, service);
-
-              service.restangularizeCollection = _.bind(restangularizeCollectionAndElements, service);
-
-              return service;
-          }
-
-          return createServiceForConfiguration(globalConfiguration);
-
-        }];
-    }
-);
-
-})();
-
 //! moment.js
-//! version : 2.10.6
+//! version : 2.11.0
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
 //! momentjs.com
 
-(function (global, factory) {
+;(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
     global.moment = factory()
@@ -9766,39 +8494,45 @@ module.provider('Restangular', function() {
         return m;
     }
 
+    function isUndefined(input) {
+        return input === void 0;
+    }
+
+    // Plugins that add properties should also add the key here (null value),
+    // so we can properly clone ourselves.
     var momentProperties = utils_hooks__hooks.momentProperties = [];
 
     function copyConfig(to, from) {
         var i, prop, val;
 
-        if (typeof from._isAMomentObject !== 'undefined') {
+        if (!isUndefined(from._isAMomentObject)) {
             to._isAMomentObject = from._isAMomentObject;
         }
-        if (typeof from._i !== 'undefined') {
+        if (!isUndefined(from._i)) {
             to._i = from._i;
         }
-        if (typeof from._f !== 'undefined') {
+        if (!isUndefined(from._f)) {
             to._f = from._f;
         }
-        if (typeof from._l !== 'undefined') {
+        if (!isUndefined(from._l)) {
             to._l = from._l;
         }
-        if (typeof from._strict !== 'undefined') {
+        if (!isUndefined(from._strict)) {
             to._strict = from._strict;
         }
-        if (typeof from._tzm !== 'undefined') {
+        if (!isUndefined(from._tzm)) {
             to._tzm = from._tzm;
         }
-        if (typeof from._isUTC !== 'undefined') {
+        if (!isUndefined(from._isUTC)) {
             to._isUTC = from._isUTC;
         }
-        if (typeof from._offset !== 'undefined') {
+        if (!isUndefined(from._offset)) {
             to._offset = from._offset;
         }
-        if (typeof from._pf !== 'undefined') {
+        if (!isUndefined(from._pf)) {
             to._pf = getParsingFlags(from);
         }
-        if (typeof from._locale !== 'undefined') {
+        if (!isUndefined(from._locale)) {
             to._locale = from._locale;
         }
 
@@ -9806,7 +8540,7 @@ module.provider('Restangular', function() {
             for (i in momentProperties) {
                 prop = momentProperties[i];
                 val = from[prop];
-                if (typeof val !== 'undefined') {
+                if (!isUndefined(val)) {
                     to[prop] = val;
                 }
             }
@@ -9853,6 +8587,7 @@ module.provider('Restangular', function() {
         return value;
     }
 
+    // compare two arrays, return the number of differences
     function compareArrays(array1, array2, dontConvert) {
         var len = Math.min(array1.length, array2.length),
             lengthDiff = Math.abs(array1.length - array2.length),
@@ -9870,6 +8605,7 @@ module.provider('Restangular', function() {
     function Locale() {
     }
 
+    // internal storage for locale config files
     var locales = {};
     var globalLocale;
 
@@ -9907,7 +8643,7 @@ module.provider('Restangular', function() {
     function loadLocale(name) {
         var oldLocale = null;
         // TODO: Find a better way to register and load all the locales in Node
-        if (!locales[name] && typeof module !== 'undefined' &&
+        if (!locales[name] && !isUndefined(module) &&
                 module && module.exports) {
             try {
                 oldLocale = globalLocale._abbr;
@@ -9926,7 +8662,7 @@ module.provider('Restangular', function() {
     function locale_locales__getSetGlobalLocale (key, values) {
         var data;
         if (key) {
-            if (typeof values === 'undefined') {
+            if (isUndefined(values)) {
                 data = locale_locales__getLocale(key);
             }
             else {
@@ -10011,6 +8747,10 @@ module.provider('Restangular', function() {
         return normalizedInput;
     }
 
+    function isFunction(input) {
+        return input instanceof Function || Object.prototype.toString.call(input) === '[object Function]';
+    }
+
     function makeGetSet (unit, keepTime) {
         return function (value) {
             if (value != null) {
@@ -10024,11 +8764,14 @@ module.provider('Restangular', function() {
     }
 
     function get_set__get (mom, unit) {
-        return mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]();
+        return mom.isValid() ?
+            mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]() : NaN;
     }
 
     function get_set__set (mom, unit, value) {
-        return mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
+        if (mom.isValid()) {
+            mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
+        }
     }
 
     // MOMENTS
@@ -10041,7 +8784,7 @@ module.provider('Restangular', function() {
             }
         } else {
             units = normalizeUnits(units);
-            if (typeof this[units] === 'function') {
+            if (isFunction(this[units])) {
                 return this[units](value);
             }
         }
@@ -10056,7 +8799,7 @@ module.provider('Restangular', function() {
             Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
     }
 
-    var formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
+    var formattingTokens = /(\[[^\[]*\])|(\\)?([Hh]mm(ss)?|Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Qo?|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
 
     var localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g;
 
@@ -10152,6 +8895,8 @@ module.provider('Restangular', function() {
     var match4         = /\d{4}/;         //    0000 - 9999
     var match6         = /[+-]?\d{6}/;    // -999999 - 999999
     var match1to2      = /\d\d?/;         //       0 - 99
+    var match3to4      = /\d\d\d\d?/;     //     999 - 9999
+    var match5to6      = /\d\d\d\d\d\d?/; //   99999 - 999999
     var match1to3      = /\d{1,3}/;       //       0 - 999
     var match1to4      = /\d{1,4}/;       //       0 - 9999
     var match1to6      = /[+-]?\d{1,6}/;  // -999999 - 999999
@@ -10160,20 +8905,16 @@ module.provider('Restangular', function() {
     var matchSigned    = /[+-]?\d+/;      //    -inf - inf
 
     var matchOffset    = /Z|[+-]\d\d:?\d\d/gi; // +00:00 -00:00 +0000 -0000 or Z
+    var matchShortOffset = /Z|[+-]\d\d(?::?\d\d)?/gi; // +00 -00 +00:00 -00:00 +0000 -0000 or Z
 
     var matchTimestamp = /[+-]?\d+(\.\d{1,3})?/; // 123456789 123456789.123
 
     // any word (or two) characters or numbers including two/three word month in arabic.
-    var matchWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+    // includes scottish gaelic two word and hyphenated months
+    var matchWord = /[0-9]*(a[mn]\s?)?['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF\-]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+
 
     var regexes = {};
-
-    function isFunction (sth) {
-        // https://github.com/moment/moment/issues/2325
-        return typeof sth === 'function' &&
-            Object.prototype.toString.call(sth) === '[object Function]';
-    }
-
 
     function addRegexToken (token, regex, strictRegex) {
         regexes[token] = isFunction(regex) ? regex : function (isStrict) {
@@ -10233,6 +8974,8 @@ module.provider('Restangular', function() {
     var MINUTE = 4;
     var SECOND = 5;
     var MILLISECOND = 6;
+    var WEEK = 7;
+    var WEEKDAY = 8;
 
     function daysInMonth(year, month) {
         return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -10279,14 +9022,17 @@ module.provider('Restangular', function() {
 
     // LOCALES
 
+    var MONTHS_IN_FORMAT = /D[oD]?(\[[^\[\]]*\]|\s+)+MMMM?/;
     var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
-    function localeMonths (m) {
-        return this._months[m.month()];
+    function localeMonths (m, format) {
+        return isArray(this._months) ? this._months[m.month()] :
+            this._months[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
     }
 
-    var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
-    function localeMonthsShort (m) {
-        return this._monthsShort[m.month()];
+    var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sept_Oct_Nov_Dec'.split('_');
+    function localeMonthsShort (m, format) {
+        return isArray(this._monthsShort) ? this._monthsShort[m.month()] :
+            this._monthsShort[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
     }
 
     function localeMonthsParse (monthName, format, strict) {
@@ -10324,6 +9070,11 @@ module.provider('Restangular', function() {
 
     function setMonth (mom, value) {
         var dayOfMonth;
+
+        if (!mom.isValid()) {
+            // No op
+            return mom;
+        }
 
         // TODO: Move this out of here!
         if (typeof value === 'string') {
@@ -10370,6 +9121,12 @@ module.provider('Restangular', function() {
             if (getParsingFlags(m)._overflowDayOfYear && (overflow < YEAR || overflow > DATE)) {
                 overflow = DATE;
             }
+            if (getParsingFlags(m)._overflowWeeks && overflow === -1) {
+                overflow = WEEK;
+            }
+            if (getParsingFlags(m)._overflowWeekday && overflow === -1) {
+                overflow = WEEKDAY;
+            }
 
             getParsingFlags(m).overflow = overflow;
         }
@@ -10378,7 +9135,7 @@ module.provider('Restangular', function() {
     }
 
     function warn(msg) {
-        if (utils_hooks__hooks.suppressDeprecationWarnings === false && typeof console !== 'undefined' && console.warn) {
+        if (utils_hooks__hooks.suppressDeprecationWarnings === false && !isUndefined(console) && console.warn) {
             console.warn('Deprecation warning: ' + msg);
         }
     }
@@ -10388,7 +9145,7 @@ module.provider('Restangular', function() {
 
         return extend(function () {
             if (firstTime) {
-                warn(msg + '\n' + (new Error()).stack);
+                warn(msg + '\nArguments: ' + Array.prototype.slice.call(arguments).join(', ') + '\n' + (new Error()).stack);
                 firstTime = false;
             }
             return fn.apply(this, arguments);
@@ -10406,22 +9163,39 @@ module.provider('Restangular', function() {
 
     utils_hooks__hooks.suppressDeprecationWarnings = false;
 
-    var from_string__isoRegex = /^\s*(?:[+-]\d{6}|\d{4})-(?:(\d\d-\d\d)|(W\d\d$)|(W\d\d-\d)|(\d\d\d))((T| )(\d\d(:\d\d(:\d\d(\.\d+)?)?)?)?([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+    // iso 8601 regex
+    // 0000-00-00 0000-W00 or 0000-W00-0 + T + 00 or 00:00 or 00:00:00 or 00:00:00.000 + +00:00 or +0000 or +00)
+    var extendedIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})-(?:\d\d-\d\d|W\d\d-\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?::\d\d(?::\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?/;
+    var basicIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})(?:\d\d\d\d|W\d\d\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?:\d\d(?:\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?/;
+
+    var tzRegex = /Z|[+-]\d\d(?::?\d\d)?/;
 
     var isoDates = [
-        ['YYYYYY-MM-DD', /[+-]\d{6}-\d{2}-\d{2}/],
-        ['YYYY-MM-DD', /\d{4}-\d{2}-\d{2}/],
-        ['GGGG-[W]WW-E', /\d{4}-W\d{2}-\d/],
-        ['GGGG-[W]WW', /\d{4}-W\d{2}/],
-        ['YYYY-DDD', /\d{4}-\d{3}/]
+        ['YYYYYY-MM-DD', /[+-]\d{6}-\d\d-\d\d/],
+        ['YYYY-MM-DD', /\d{4}-\d\d-\d\d/],
+        ['GGGG-[W]WW-E', /\d{4}-W\d\d-\d/],
+        ['GGGG-[W]WW', /\d{4}-W\d\d/, false],
+        ['YYYY-DDD', /\d{4}-\d{3}/],
+        ['YYYY-MM', /\d{4}-\d\d/, false],
+        ['YYYYYYMMDD', /[+-]\d{10}/],
+        ['YYYYMMDD', /\d{8}/],
+        // YYYYMM is NOT allowed by the standard
+        ['GGGG[W]WWE', /\d{4}W\d{3}/],
+        ['GGGG[W]WW', /\d{4}W\d{2}/, false],
+        ['YYYYDDD', /\d{7}/]
     ];
 
     // iso time formats and regexes
     var isoTimes = [
-        ['HH:mm:ss.SSSS', /(T| )\d\d:\d\d:\d\d\.\d+/],
-        ['HH:mm:ss', /(T| )\d\d:\d\d:\d\d/],
-        ['HH:mm', /(T| )\d\d:\d\d/],
-        ['HH', /(T| )\d\d/]
+        ['HH:mm:ss.SSSS', /\d\d:\d\d:\d\d\.\d+/],
+        ['HH:mm:ss,SSSS', /\d\d:\d\d:\d\d,\d+/],
+        ['HH:mm:ss', /\d\d:\d\d:\d\d/],
+        ['HH:mm', /\d\d:\d\d/],
+        ['HHmmss.SSSS', /\d\d\d\d\d\d\.\d+/],
+        ['HHmmss,SSSS', /\d\d\d\d\d\d,\d+/],
+        ['HHmmss', /\d\d\d\d\d\d/],
+        ['HHmm', /\d\d\d\d/],
+        ['HH', /\d\d/]
     ];
 
     var aspNetJsonRegex = /^\/?Date\((\-?\d+)/i;
@@ -10430,26 +9204,49 @@ module.provider('Restangular', function() {
     function configFromISO(config) {
         var i, l,
             string = config._i,
-            match = from_string__isoRegex.exec(string);
+            match = extendedIsoRegex.exec(string) || basicIsoRegex.exec(string),
+            allowTime, dateFormat, timeFormat, tzFormat;
 
         if (match) {
             getParsingFlags(config).iso = true;
+
             for (i = 0, l = isoDates.length; i < l; i++) {
-                if (isoDates[i][1].exec(string)) {
-                    config._f = isoDates[i][0];
+                if (isoDates[i][1].exec(match[1])) {
+                    dateFormat = isoDates[i][0];
+                    allowTime = isoDates[i][2] !== false;
                     break;
                 }
             }
-            for (i = 0, l = isoTimes.length; i < l; i++) {
-                if (isoTimes[i][1].exec(string)) {
-                    // match[6] should be 'T' or space
-                    config._f += (match[6] || ' ') + isoTimes[i][0];
-                    break;
+            if (dateFormat == null) {
+                config._isValid = false;
+                return;
+            }
+            if (match[3]) {
+                for (i = 0, l = isoTimes.length; i < l; i++) {
+                    if (isoTimes[i][1].exec(match[3])) {
+                        // match[2] should be 'T' or space
+                        timeFormat = (match[2] || ' ') + isoTimes[i][0];
+                        break;
+                    }
+                }
+                if (timeFormat == null) {
+                    config._isValid = false;
+                    return;
                 }
             }
-            if (string.match(matchOffset)) {
-                config._f += 'Z';
+            if (!allowTime && timeFormat != null) {
+                config._isValid = false;
+                return;
             }
+            if (match[4]) {
+                if (tzRegex.exec(match[4])) {
+                    tzFormat = 'Z';
+                } else {
+                    config._isValid = false;
+                    return;
+                }
+            }
+            config._f = dateFormat + (timeFormat || '') + (tzFormat || '');
             configFromStringAndFormat(config);
         } else {
             config._isValid = false;
@@ -10487,8 +9284,8 @@ module.provider('Restangular', function() {
         //http://stackoverflow.com/questions/181348/instantiating-a-javascript-object-by-calling-prototype-constructor-apply
         var date = new Date(y, m, d, h, M, s, ms);
 
-        //the date constructor doesn't accept years < 1970
-        if (y < 1970) {
+        //the date constructor remaps years 0-99 to 1900-1999
+        if (y < 100 && y >= 0 && isFinite(date.getFullYear())) {
             date.setFullYear(y);
         }
         return date;
@@ -10496,11 +9293,15 @@ module.provider('Restangular', function() {
 
     function createUTCDate (y) {
         var date = new Date(Date.UTC.apply(null, arguments));
-        if (y < 1970) {
+
+        //the Date.UTC function remaps years 0-99 to 1900-1999
+        if (y < 100 && y >= 0 && isFinite(date.getUTCFullYear())) {
             date.setUTCFullYear(y);
         }
         return date;
     }
+
+    // FORMATTING
 
     addFormatToken(0, ['YY', 2], 0, function () {
         return this.year() % 100;
@@ -10554,124 +9355,66 @@ module.provider('Restangular', function() {
         return isLeapYear(this.year());
     }
 
-    addFormatToken('w', ['ww', 2], 'wo', 'week');
-    addFormatToken('W', ['WW', 2], 'Wo', 'isoWeek');
+    // start-of-first-week - start-of-year
+    function firstWeekOffset(year, dow, doy) {
+        var // first-week day -- which january is always in the first week (4 for iso, 1 for other)
+            fwd = 7 + dow - doy,
+            // first-week day local weekday -- which local weekday is fwd
+            fwdlw = (7 + createUTCDate(year, 0, fwd).getUTCDay() - dow) % 7;
 
-    // ALIASES
-
-    addUnitAlias('week', 'w');
-    addUnitAlias('isoWeek', 'W');
-
-    // PARSING
-
-    addRegexToken('w',  match1to2);
-    addRegexToken('ww', match1to2, match2);
-    addRegexToken('W',  match1to2);
-    addRegexToken('WW', match1to2, match2);
-
-    addWeekParseToken(['w', 'ww', 'W', 'WW'], function (input, week, config, token) {
-        week[token.substr(0, 1)] = toInt(input);
-    });
-
-    // HELPERS
-
-    // firstDayOfWeek       0 = sun, 6 = sat
-    //                      the day of the week that starts the week
-    //                      (usually sunday or monday)
-    // firstDayOfWeekOfYear 0 = sun, 6 = sat
-    //                      the first week is the week that contains the first
-    //                      of this day of the week
-    //                      (eg. ISO weeks use thursday (4))
-    function weekOfYear(mom, firstDayOfWeek, firstDayOfWeekOfYear) {
-        var end = firstDayOfWeekOfYear - firstDayOfWeek,
-            daysToDayOfWeek = firstDayOfWeekOfYear - mom.day(),
-            adjustedMoment;
-
-
-        if (daysToDayOfWeek > end) {
-            daysToDayOfWeek -= 7;
-        }
-
-        if (daysToDayOfWeek < end - 7) {
-            daysToDayOfWeek += 7;
-        }
-
-        adjustedMoment = local__createLocal(mom).add(daysToDayOfWeek, 'd');
-        return {
-            week: Math.ceil(adjustedMoment.dayOfYear() / 7),
-            year: adjustedMoment.year()
-        };
+        return -fwdlw + fwd - 1;
     }
-
-    // LOCALES
-
-    function localeWeek (mom) {
-        return weekOfYear(mom, this._week.dow, this._week.doy).week;
-    }
-
-    var defaultLocaleWeek = {
-        dow : 0, // Sunday is the first day of the week.
-        doy : 6  // The week that contains Jan 1st is the first week of the year.
-    };
-
-    function localeFirstDayOfWeek () {
-        return this._week.dow;
-    }
-
-    function localeFirstDayOfYear () {
-        return this._week.doy;
-    }
-
-    // MOMENTS
-
-    function getSetWeek (input) {
-        var week = this.localeData().week(this);
-        return input == null ? week : this.add((input - week) * 7, 'd');
-    }
-
-    function getSetISOWeek (input) {
-        var week = weekOfYear(this, 1, 4).week;
-        return input == null ? week : this.add((input - week) * 7, 'd');
-    }
-
-    addFormatToken('DDD', ['DDDD', 3], 'DDDo', 'dayOfYear');
-
-    // ALIASES
-
-    addUnitAlias('dayOfYear', 'DDD');
-
-    // PARSING
-
-    addRegexToken('DDD',  match1to3);
-    addRegexToken('DDDD', match3);
-    addParseToken(['DDD', 'DDDD'], function (input, array, config) {
-        config._dayOfYear = toInt(input);
-    });
-
-    // HELPERS
 
     //http://en.wikipedia.org/wiki/ISO_week_date#Calculating_a_date_given_the_year.2C_week_number_and_weekday
-    function dayOfYearFromWeeks(year, week, weekday, firstDayOfWeekOfYear, firstDayOfWeek) {
-        var week1Jan = 6 + firstDayOfWeek - firstDayOfWeekOfYear, janX = createUTCDate(year, 0, 1 + week1Jan), d = janX.getUTCDay(), dayOfYear;
-        if (d < firstDayOfWeek) {
-            d += 7;
+    function dayOfYearFromWeeks(year, week, weekday, dow, doy) {
+        var localWeekday = (7 + weekday - dow) % 7,
+            weekOffset = firstWeekOffset(year, dow, doy),
+            dayOfYear = 1 + 7 * (week - 1) + localWeekday + weekOffset,
+            resYear, resDayOfYear;
+
+        if (dayOfYear <= 0) {
+            resYear = year - 1;
+            resDayOfYear = daysInYear(resYear) + dayOfYear;
+        } else if (dayOfYear > daysInYear(year)) {
+            resYear = year + 1;
+            resDayOfYear = dayOfYear - daysInYear(year);
+        } else {
+            resYear = year;
+            resDayOfYear = dayOfYear;
         }
 
-        weekday = weekday != null ? 1 * weekday : firstDayOfWeek;
-
-        dayOfYear = 1 + week1Jan + 7 * (week - 1) - d + weekday;
-
         return {
-            year: dayOfYear > 0 ? year : year - 1,
-            dayOfYear: dayOfYear > 0 ?  dayOfYear : daysInYear(year - 1) + dayOfYear
+            year: resYear,
+            dayOfYear: resDayOfYear
         };
     }
 
-    // MOMENTS
+    function weekOfYear(mom, dow, doy) {
+        var weekOffset = firstWeekOffset(mom.year(), dow, doy),
+            week = Math.floor((mom.dayOfYear() - weekOffset - 1) / 7) + 1,
+            resWeek, resYear;
 
-    function getSetDayOfYear (input) {
-        var dayOfYear = Math.round((this.clone().startOf('day') - this.clone().startOf('year')) / 864e5) + 1;
-        return input == null ? dayOfYear : this.add((input - dayOfYear), 'd');
+        if (week < 1) {
+            resYear = mom.year() - 1;
+            resWeek = week + weeksInYear(resYear, dow, doy);
+        } else if (week > weeksInYear(mom.year(), dow, doy)) {
+            resWeek = week - weeksInYear(mom.year(), dow, doy);
+            resYear = mom.year() + 1;
+        } else {
+            resYear = mom.year();
+            resWeek = week;
+        }
+
+        return {
+            week: resWeek,
+            year: resYear
+        };
+    }
+
+    function weeksInYear(year, dow, doy) {
+        var weekOffset = firstWeekOffset(year, dow, doy),
+            weekOffsetNext = firstWeekOffset(year + 1, dow, doy);
+        return (daysInYear(year) - weekOffset + weekOffsetNext) / 7;
     }
 
     // Pick the first defined of two or three arguments.
@@ -10686,11 +9429,12 @@ module.provider('Restangular', function() {
     }
 
     function currentDateArray(config) {
-        var now = new Date();
+        // hooks is actually the exported moment object
+        var nowValue = new Date(utils_hooks__hooks.now());
         if (config._useUTC) {
-            return [now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()];
+            return [nowValue.getUTCFullYear(), nowValue.getUTCMonth(), nowValue.getUTCDate()];
         }
-        return [now.getFullYear(), now.getMonth(), now.getDate()];
+        return [nowValue.getFullYear(), nowValue.getMonth(), nowValue.getDate()];
     }
 
     // convert an array to a date.
@@ -10760,7 +9504,7 @@ module.provider('Restangular', function() {
     }
 
     function dayOfYearFromWeekInfo(config) {
-        var w, weekYear, week, weekday, dow, doy, temp;
+        var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
 
         w = config._w;
         if (w.GG != null || w.W != null || w.E != null) {
@@ -10774,6 +9518,9 @@ module.provider('Restangular', function() {
             weekYear = defaults(w.GG, config._a[YEAR], weekOfYear(local__createLocal(), 1, 4).year);
             week = defaults(w.W, 1);
             weekday = defaults(w.E, 1);
+            if (weekday < 1 || weekday > 7) {
+                weekdayOverflow = true;
+            }
         } else {
             dow = config._locale._week.dow;
             doy = config._locale._week.doy;
@@ -10784,23 +9531,32 @@ module.provider('Restangular', function() {
             if (w.d != null) {
                 // weekday -- low day numbers are considered next week
                 weekday = w.d;
-                if (weekday < dow) {
-                    ++week;
+                if (weekday < 0 || weekday > 6) {
+                    weekdayOverflow = true;
                 }
             } else if (w.e != null) {
                 // local weekday -- counting starts from begining of week
                 weekday = w.e + dow;
+                if (w.e < 0 || w.e > 6) {
+                    weekdayOverflow = true;
+                }
             } else {
                 // default to begining of week
                 weekday = dow;
             }
         }
-        temp = dayOfYearFromWeeks(weekYear, week, weekday, doy, dow);
-
-        config._a[YEAR] = temp.year;
-        config._dayOfYear = temp.dayOfYear;
+        if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
+            getParsingFlags(config)._overflowWeeks = true;
+        } else if (weekdayOverflow != null) {
+            getParsingFlags(config)._overflowWeekday = true;
+        } else {
+            temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
+            config._a[YEAR] = temp.year;
+            config._dayOfYear = temp.dayOfYear;
+        }
     }
 
+    // constant that refers to the ISO standard
     utils_hooks__hooks.ISO_8601 = function () {};
 
     // date from string and format string
@@ -10893,6 +9649,7 @@ module.provider('Restangular', function() {
         }
     }
 
+    // date from string and array of format strings
     function configFromStringAndArray(config) {
         var tempConfig,
             bestMoment,
@@ -10943,7 +9700,9 @@ module.provider('Restangular', function() {
         }
 
         var i = normalizeObjectUnits(config._i);
-        config._a = [i.year, i.month, i.day || i.date, i.hour, i.minute, i.second, i.millisecond];
+        config._a = map([i.year, i.month, i.day || i.date, i.hour, i.minute, i.second, i.millisecond], function (obj) {
+            return obj && parseInt(obj, 10);
+        });
 
         configFromArray(config);
     }
@@ -10985,13 +9744,17 @@ module.provider('Restangular', function() {
             configFromInput(config);
         }
 
+        if (!valid__isValid(config)) {
+            config._d = null;
+        }
+
         return config;
     }
 
     function configFromInput(config) {
         var input = config._i;
         if (input === undefined) {
-            config._d = new Date();
+            config._d = new Date(utils_hooks__hooks.now());
         } else if (isDate(input)) {
             config._d = new Date(+input);
         } else if (typeof input === 'string') {
@@ -11038,7 +9801,11 @@ module.provider('Restangular', function() {
          'moment().min is deprecated, use moment.min instead. https://github.com/moment/moment/issues/1548',
          function () {
              var other = local__createLocal.apply(null, arguments);
-             return other < this ? this : other;
+             if (this.isValid() && other.isValid()) {
+                 return other < this ? this : other;
+             } else {
+                 return valid__createInvalid();
+             }
          }
      );
 
@@ -11046,7 +9813,11 @@ module.provider('Restangular', function() {
         'moment().max is deprecated, use moment.max instead. https://github.com/moment/moment/issues/1548',
         function () {
             var other = local__createLocal.apply(null, arguments);
-            return other > this ? this : other;
+            if (this.isValid() && other.isValid()) {
+                return other > this ? this : other;
+            } else {
+                return valid__createInvalid();
+            }
         }
     );
 
@@ -11084,6 +9855,10 @@ module.provider('Restangular', function() {
 
         return pickBy('isAfter', args);
     }
+
+    var now = Date.now || function () {
+        return +(new Date());
+    };
 
     function Duration (duration) {
         var normalizedInput = normalizeObjectUnits(duration),
@@ -11124,6 +9899,8 @@ module.provider('Restangular', function() {
         return obj instanceof Duration;
     }
 
+    // FORMATTING
+
     function offset (token, separator) {
         addFormatToken(token, 0, 0, function () {
             var offset = this.utcOffset();
@@ -11141,11 +9918,11 @@ module.provider('Restangular', function() {
 
     // PARSING
 
-    addRegexToken('Z',  matchOffset);
-    addRegexToken('ZZ', matchOffset);
+    addRegexToken('Z',  matchShortOffset);
+    addRegexToken('ZZ', matchShortOffset);
     addParseToken(['Z', 'ZZ'], function (input, array, config) {
         config._useUTC = true;
-        config._tzm = offsetFromString(input);
+        config._tzm = offsetFromString(matchShortOffset, input);
     });
 
     // HELPERS
@@ -11155,8 +9932,8 @@ module.provider('Restangular', function() {
     // '-1530'  > ['-15', '30']
     var chunkOffset = /([\+\-]|\d\d)/gi;
 
-    function offsetFromString(string) {
-        var matches = ((string || '').match(matchOffset) || []);
+    function offsetFromString(matcher, string) {
+        var matches = ((string || '').match(matcher) || []);
         var chunk   = matches[matches.length - 1] || [];
         var parts   = (chunk + '').match(chunkOffset) || ['-', 0, 0];
         var minutes = +(parts[1] * 60) + toInt(parts[2]);
@@ -11206,11 +9983,13 @@ module.provider('Restangular', function() {
     function getSetOffset (input, keepLocalTime) {
         var offset = this._offset || 0,
             localAdjust;
+        if (!this.isValid()) {
+            return input != null ? this : NaN;
+        }
         if (input != null) {
             if (typeof input === 'string') {
-                input = offsetFromString(input);
-            }
-            if (Math.abs(input) < 16) {
+                input = offsetFromString(matchShortOffset, input);
+            } else if (Math.abs(input) < 16) {
                 input = input * 60;
             }
             if (!this._isUTC && keepLocalTime) {
@@ -11270,12 +10049,15 @@ module.provider('Restangular', function() {
         if (this._tzm) {
             this.utcOffset(this._tzm);
         } else if (typeof this._i === 'string') {
-            this.utcOffset(offsetFromString(this._i));
+            this.utcOffset(offsetFromString(matchOffset, this._i));
         }
         return this;
     }
 
     function hasAlignedHourOffset (input) {
+        if (!this.isValid()) {
+            return false;
+        }
         input = input ? local__createLocal(input).utcOffset() : 0;
 
         return (this.utcOffset() - input) % 60 === 0;
@@ -11289,7 +10071,7 @@ module.provider('Restangular', function() {
     }
 
     function isDaylightSavingTimeShifted () {
-        if (typeof this._isDSTShifted !== 'undefined') {
+        if (!isUndefined(this._isDSTShifted)) {
             return this._isDSTShifted;
         }
 
@@ -11310,22 +10092,23 @@ module.provider('Restangular', function() {
     }
 
     function isLocal () {
-        return !this._isUTC;
+        return this.isValid() ? !this._isUTC : false;
     }
 
     function isUtcOffset () {
-        return this._isUTC;
+        return this.isValid() ? this._isUTC : false;
     }
 
     function isUtc () {
-        return this._isUTC && this._offset === 0;
+        return this.isValid() ? this._isUTC && this._offset === 0 : false;
     }
 
-    var aspNetRegex = /(\-)?(?:(\d*)\.)?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/;
+    // ASP.NET json date format regex
+    var aspNetRegex = /(\-)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/;
 
     // from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
     // somewhat more in line with 4.4.3.2 2004 spec, but allows decimal anywhere
-    var create__isoRegex = /^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/;
+    var isoRegex = /^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/;
 
     function create__createDuration (input, key) {
         var duration = input,
@@ -11358,7 +10141,7 @@ module.provider('Restangular', function() {
                 s  : toInt(match[SECOND])      * sign,
                 ms : toInt(match[MILLISECOND]) * sign
             };
-        } else if (!!(match = create__isoRegex.exec(input))) {
+        } else if (!!(match = isoRegex.exec(input))) {
             sign = (match[1] === '-') ? -1 : 1;
             duration = {
                 y : parseIso(match[2], sign),
@@ -11415,6 +10198,10 @@ module.provider('Restangular', function() {
 
     function momentsDifference(base, other) {
         var res;
+        if (!(base.isValid() && other.isValid())) {
+            return {milliseconds: 0, months: 0};
+        }
+
         other = cloneWithOffset(other, base);
         if (base.isBefore(other)) {
             res = positiveMomentsDifference(base, other);
@@ -11427,6 +10214,7 @@ module.provider('Restangular', function() {
         return res;
     }
 
+    // TODO: remove 'name' arg after deprecation is removed
     function createAdder(direction, name) {
         return function (val, period) {
             var dur, tmp;
@@ -11447,6 +10235,12 @@ module.provider('Restangular', function() {
         var milliseconds = duration._milliseconds,
             days = duration._days,
             months = duration._months;
+
+        if (!mom.isValid()) {
+            // No op
+            return;
+        }
+
         updateOffset = updateOffset == null ? true : updateOffset;
 
         if (milliseconds) {
@@ -11478,7 +10272,10 @@ module.provider('Restangular', function() {
                 diff < 1 ? 'sameDay' :
                 diff < 2 ? 'nextDay' :
                 diff < 7 ? 'nextWeek' : 'sameElse';
-        return this.format(formats && formats[format] || this.localeData().calendar(format, this, local__createLocal(now)));
+
+        var output = formats && (isFunction(formats[format]) ? formats[format]() : formats[format]);
+
+        return this.format(output || this.localeData().calendar(format, this, local__createLocal(now)));
     }
 
     function clone () {
@@ -11486,26 +10283,28 @@ module.provider('Restangular', function() {
     }
 
     function isAfter (input, units) {
-        var inputMs;
-        units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
+        var localInput = isMoment(input) ? input : local__createLocal(input);
+        if (!(this.isValid() && localInput.isValid())) {
+            return false;
+        }
+        units = normalizeUnits(!isUndefined(units) ? units : 'millisecond');
         if (units === 'millisecond') {
-            input = isMoment(input) ? input : local__createLocal(input);
-            return +this > +input;
+            return +this > +localInput;
         } else {
-            inputMs = isMoment(input) ? +input : +local__createLocal(input);
-            return inputMs < +this.clone().startOf(units);
+            return +localInput < +this.clone().startOf(units);
         }
     }
 
     function isBefore (input, units) {
-        var inputMs;
-        units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
+        var localInput = isMoment(input) ? input : local__createLocal(input);
+        if (!(this.isValid() && localInput.isValid())) {
+            return false;
+        }
+        units = normalizeUnits(!isUndefined(units) ? units : 'millisecond');
         if (units === 'millisecond') {
-            input = isMoment(input) ? input : local__createLocal(input);
-            return +this < +input;
+            return +this < +localInput;
         } else {
-            inputMs = isMoment(input) ? +input : +local__createLocal(input);
-            return +this.clone().endOf(units) < inputMs;
+            return +this.clone().endOf(units) < +localInput;
         }
     }
 
@@ -11514,21 +10313,44 @@ module.provider('Restangular', function() {
     }
 
     function isSame (input, units) {
-        var inputMs;
+        var localInput = isMoment(input) ? input : local__createLocal(input),
+            inputMs;
+        if (!(this.isValid() && localInput.isValid())) {
+            return false;
+        }
         units = normalizeUnits(units || 'millisecond');
         if (units === 'millisecond') {
-            input = isMoment(input) ? input : local__createLocal(input);
-            return +this === +input;
+            return +this === +localInput;
         } else {
-            inputMs = +local__createLocal(input);
+            inputMs = +localInput;
             return +(this.clone().startOf(units)) <= inputMs && inputMs <= +(this.clone().endOf(units));
         }
     }
 
+    function isSameOrAfter (input, units) {
+        return this.isSame(input, units) || this.isAfter(input,units);
+    }
+
+    function isSameOrBefore (input, units) {
+        return this.isSame(input, units) || this.isBefore(input,units);
+    }
+
     function diff (input, units, asFloat) {
-        var that = cloneWithOffset(input, this),
-            zoneDelta = (that.utcOffset() - this.utcOffset()) * 6e4,
+        var that,
+            zoneDelta,
             delta, output;
+
+        if (!this.isValid()) {
+            return NaN;
+        }
+
+        that = cloneWithOffset(input, this);
+
+        if (!that.isValid()) {
+            return NaN;
+        }
+
+        zoneDelta = (that.utcOffset() - this.utcOffset()) * 6e4;
 
         units = normalizeUnits(units);
 
@@ -11580,7 +10402,7 @@ module.provider('Restangular', function() {
     function moment_format__toISOString () {
         var m = this.clone().utc();
         if (0 < m.year() && m.year() <= 9999) {
-            if ('function' === typeof Date.prototype.toISOString) {
+            if (isFunction(Date.prototype.toISOString)) {
                 // native implementation is ~50x faster, use it when we can
                 return this.toDate().toISOString();
             } else {
@@ -11597,10 +10419,13 @@ module.provider('Restangular', function() {
     }
 
     function from (time, withoutSuffix) {
-        if (!this.isValid()) {
+        if (this.isValid() &&
+                ((isMoment(time) && time.isValid()) ||
+                 local__createLocal(time).isValid())) {
+            return create__createDuration({to: this, from: time}).locale(this.locale()).humanize(!withoutSuffix);
+        } else {
             return this.localeData().invalidDate();
         }
-        return create__createDuration({to: this, from: time}).locale(this.locale()).humanize(!withoutSuffix);
     }
 
     function fromNow (withoutSuffix) {
@@ -11608,16 +10433,22 @@ module.provider('Restangular', function() {
     }
 
     function to (time, withoutSuffix) {
-        if (!this.isValid()) {
+        if (this.isValid() &&
+                ((isMoment(time) && time.isValid()) ||
+                 local__createLocal(time).isValid())) {
+            return create__createDuration({from: this, to: time}).locale(this.locale()).humanize(!withoutSuffix);
+        } else {
             return this.localeData().invalidDate();
         }
-        return create__createDuration({from: this, to: time}).locale(this.locale()).humanize(!withoutSuffix);
     }
 
     function toNow (withoutSuffix) {
         return this.to(local__createLocal(), withoutSuffix);
     }
 
+    // If passed a locale key, it will set the locale for this
+    // instance.  Otherwise, it will return the locale configuration
+    // variables for this instance.
     function locale (key) {
         var newLocaleData;
 
@@ -11728,6 +10559,11 @@ module.provider('Restangular', function() {
         };
     }
 
+    function toJSON () {
+        // JSON.stringify(new Date(NaN)) === 'null'
+        return this.isValid() ? this.toISOString() : 'null';
+    }
+
     function moment_valid__isValid () {
         return valid__isValid(this);
     }
@@ -11739,6 +10575,18 @@ module.provider('Restangular', function() {
     function invalidAt () {
         return getParsingFlags(this).overflow;
     }
+
+    function creationData() {
+        return {
+            input: this._i,
+            format: this._f,
+            locale: this._locale,
+            isUTC: this._isUTC,
+            strict: this._strict
+        };
+    }
+
+    // FORMATTING
 
     addFormatToken(0, ['gg', 2], 0, function () {
         return this.weekYear() % 100;
@@ -11781,22 +10629,20 @@ module.provider('Restangular', function() {
         week[token] = utils_hooks__hooks.parseTwoDigitYear(input);
     });
 
-    // HELPERS
-
-    function weeksInYear(year, dow, doy) {
-        return weekOfYear(local__createLocal([year, 11, 31 + dow - doy]), dow, doy).week;
-    }
-
     // MOMENTS
 
     function getSetWeekYear (input) {
-        var year = weekOfYear(this, this.localeData()._week.dow, this.localeData()._week.doy).year;
-        return input == null ? year : this.add((input - year), 'y');
+        return getSetWeekYearHelper.call(this,
+                input,
+                this.week(),
+                this.weekday(),
+                this.localeData()._week.dow,
+                this.localeData()._week.doy);
     }
 
     function getSetISOWeekYear (input) {
-        var year = weekOfYear(this, 1, 4).year;
-        return input == null ? year : this.add((input - year), 'y');
+        return getSetWeekYearHelper.call(this,
+                input, this.isoWeek(), this.isoWeekday(), 1, 4);
     }
 
     function getISOWeeksInYear () {
@@ -11808,7 +10654,33 @@ module.provider('Restangular', function() {
         return weeksInYear(this.year(), weekInfo.dow, weekInfo.doy);
     }
 
-    addFormatToken('Q', 0, 0, 'quarter');
+    function getSetWeekYearHelper(input, week, weekday, dow, doy) {
+        var weeksTarget;
+        if (input == null) {
+            return weekOfYear(this, dow, doy).year;
+        } else {
+            weeksTarget = weeksInYear(input, dow, doy);
+            if (week > weeksTarget) {
+                week = weeksTarget;
+            }
+            return setWeekAll.call(this, input, week, weekday, dow, doy);
+        }
+    }
+
+    function setWeekAll(weekYear, week, weekday, dow, doy) {
+        var dayOfYearData = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy),
+            date = createUTCDate(dayOfYearData.year, 0, dayOfYearData.dayOfYear);
+
+        // console.log("got", weekYear, week, weekday, "set", date.toISOString());
+        this.year(date.getUTCFullYear());
+        this.month(date.getUTCMonth());
+        this.date(date.getUTCDate());
+        return this;
+    }
+
+    // FORMATTING
+
+    addFormatToken('Q', 0, 'Qo', 'quarter');
 
     // ALIASES
 
@@ -11826,6 +10698,62 @@ module.provider('Restangular', function() {
     function getSetQuarter (input) {
         return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
     }
+
+    // FORMATTING
+
+    addFormatToken('w', ['ww', 2], 'wo', 'week');
+    addFormatToken('W', ['WW', 2], 'Wo', 'isoWeek');
+
+    // ALIASES
+
+    addUnitAlias('week', 'w');
+    addUnitAlias('isoWeek', 'W');
+
+    // PARSING
+
+    addRegexToken('w',  match1to2);
+    addRegexToken('ww', match1to2, match2);
+    addRegexToken('W',  match1to2);
+    addRegexToken('WW', match1to2, match2);
+
+    addWeekParseToken(['w', 'ww', 'W', 'WW'], function (input, week, config, token) {
+        week[token.substr(0, 1)] = toInt(input);
+    });
+
+    // HELPERS
+
+    // LOCALES
+
+    function localeWeek (mom) {
+        return weekOfYear(mom, this._week.dow, this._week.doy).week;
+    }
+
+    var defaultLocaleWeek = {
+        dow : 0, // Sunday is the first day of the week.
+        doy : 6  // The week that contains Jan 1st is the first week of the year.
+    };
+
+    function localeFirstDayOfWeek () {
+        return this._week.dow;
+    }
+
+    function localeFirstDayOfYear () {
+        return this._week.doy;
+    }
+
+    // MOMENTS
+
+    function getSetWeek (input) {
+        var week = this.localeData().week(this);
+        return input == null ? week : this.add((input - week) * 7, 'd');
+    }
+
+    function getSetISOWeek (input) {
+        var week = weekOfYear(this, 1, 4).week;
+        return input == null ? week : this.add((input - week) * 7, 'd');
+    }
+
+    // FORMATTING
 
     addFormatToken('D', ['DD', 2], 'Do', 'date');
 
@@ -11849,6 +10777,8 @@ module.provider('Restangular', function() {
     // MOMENTS
 
     var getSetDayOfMonth = makeGetSet('Date', true);
+
+    // FORMATTING
 
     addFormatToken('d', 0, 'do', 'day');
 
@@ -11882,8 +10812,8 @@ module.provider('Restangular', function() {
     addRegexToken('ddd',  matchWord);
     addRegexToken('dddd', matchWord);
 
-    addWeekParseToken(['dd', 'ddd', 'dddd'], function (input, week, config) {
-        var weekday = config._locale.weekdaysParse(input);
+    addWeekParseToken(['dd', 'ddd', 'dddd'], function (input, week, config, token) {
+        var weekday = config._locale.weekdaysParse(input, token, config._strict);
         // if we didn't get a weekday name, mark the date as invalid
         if (weekday != null) {
             week.d = weekday;
@@ -11918,8 +10848,9 @@ module.provider('Restangular', function() {
     // LOCALES
 
     var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
-    function localeWeekdays (m) {
-        return this._weekdays[m.day()];
+    function localeWeekdays (m, format) {
+        return isArray(this._weekdays) ? this._weekdays[m.day()] :
+            this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
     }
 
     var defaultLocaleWeekdaysShort = 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_');
@@ -11932,20 +10863,37 @@ module.provider('Restangular', function() {
         return this._weekdaysMin[m.day()];
     }
 
-    function localeWeekdaysParse (weekdayName) {
+    function localeWeekdaysParse (weekdayName, format, strict) {
         var i, mom, regex;
 
-        this._weekdaysParse = this._weekdaysParse || [];
+        if (!this._weekdaysParse) {
+            this._weekdaysParse = [];
+            this._minWeekdaysParse = [];
+            this._shortWeekdaysParse = [];
+            this._fullWeekdaysParse = [];
+        }
 
         for (i = 0; i < 7; i++) {
             // make the regex if we don't have it already
+
+            mom = local__createLocal([2000, 1]).day(i);
+            if (strict && !this._fullWeekdaysParse[i]) {
+                this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\.?') + '$', 'i');
+                this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\.?') + '$', 'i');
+                this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\.?') + '$', 'i');
+            }
             if (!this._weekdaysParse[i]) {
-                mom = local__createLocal([2000, 1]).day(i);
                 regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
                 this._weekdaysParse[i] = new RegExp(regex.replace('.', ''), 'i');
             }
             // test the regex
-            if (this._weekdaysParse[i].test(weekdayName)) {
+            if (strict && format === 'dddd' && this._fullWeekdaysParse[i].test(weekdayName)) {
+                return i;
+            } else if (strict && format === 'ddd' && this._shortWeekdaysParse[i].test(weekdayName)) {
+                return i;
+            } else if (strict && format === 'dd' && this._minWeekdaysParse[i].test(weekdayName)) {
+                return i;
+            } else if (!strict && this._weekdaysParse[i].test(weekdayName)) {
                 return i;
             }
         }
@@ -11954,6 +10902,9 @@ module.provider('Restangular', function() {
     // MOMENTS
 
     function getSetDayOfWeek (input) {
+        if (!this.isValid()) {
+            return input != null ? this : NaN;
+        }
         var day = this._isUTC ? this._d.getUTCDay() : this._d.getDay();
         if (input != null) {
             input = parseWeekday(input, this.localeData());
@@ -11964,20 +10915,73 @@ module.provider('Restangular', function() {
     }
 
     function getSetLocaleDayOfWeek (input) {
+        if (!this.isValid()) {
+            return input != null ? this : NaN;
+        }
         var weekday = (this.day() + 7 - this.localeData()._week.dow) % 7;
         return input == null ? weekday : this.add(input - weekday, 'd');
     }
 
     function getSetISODayOfWeek (input) {
+        if (!this.isValid()) {
+            return input != null ? this : NaN;
+        }
         // behaves the same as moment#day except
         // as a getter, returns 7 instead of 0 (1-7 range instead of 0-6)
         // as a setter, sunday should belong to the previous week.
         return input == null ? this.day() || 7 : this.day(this.day() % 7 ? input : input - 7);
     }
 
-    addFormatToken('H', ['HH', 2], 0, 'hour');
-    addFormatToken('h', ['hh', 2], 0, function () {
+    // FORMATTING
+
+    addFormatToken('DDD', ['DDDD', 3], 'DDDo', 'dayOfYear');
+
+    // ALIASES
+
+    addUnitAlias('dayOfYear', 'DDD');
+
+    // PARSING
+
+    addRegexToken('DDD',  match1to3);
+    addRegexToken('DDDD', match3);
+    addParseToken(['DDD', 'DDDD'], function (input, array, config) {
+        config._dayOfYear = toInt(input);
+    });
+
+    // HELPERS
+
+    // MOMENTS
+
+    function getSetDayOfYear (input) {
+        var dayOfYear = Math.round((this.clone().startOf('day') - this.clone().startOf('year')) / 864e5) + 1;
+        return input == null ? dayOfYear : this.add((input - dayOfYear), 'd');
+    }
+
+    // FORMATTING
+
+    function hFormat() {
         return this.hours() % 12 || 12;
+    }
+
+    addFormatToken('H', ['HH', 2], 0, 'hour');
+    addFormatToken('h', ['hh', 2], 0, hFormat);
+
+    addFormatToken('hmm', 0, 0, function () {
+        return '' + hFormat.apply(this) + zeroFill(this.minutes(), 2);
+    });
+
+    addFormatToken('hmmss', 0, 0, function () {
+        return '' + hFormat.apply(this) + zeroFill(this.minutes(), 2) +
+            zeroFill(this.seconds(), 2);
+    });
+
+    addFormatToken('Hmm', 0, 0, function () {
+        return '' + this.hours() + zeroFill(this.minutes(), 2);
+    });
+
+    addFormatToken('Hmmss', 0, 0, function () {
+        return '' + this.hours() + zeroFill(this.minutes(), 2) +
+            zeroFill(this.seconds(), 2);
     });
 
     function meridiem (token, lowercase) {
@@ -12006,6 +11010,11 @@ module.provider('Restangular', function() {
     addRegexToken('HH', match1to2, match2);
     addRegexToken('hh', match1to2, match2);
 
+    addRegexToken('hmm', match3to4);
+    addRegexToken('hmmss', match5to6);
+    addRegexToken('Hmm', match3to4);
+    addRegexToken('Hmmss', match5to6);
+
     addParseToken(['H', 'HH'], HOUR);
     addParseToken(['a', 'A'], function (input, array, config) {
         config._isPm = config._locale.isPM(input);
@@ -12014,6 +11023,32 @@ module.provider('Restangular', function() {
     addParseToken(['h', 'hh'], function (input, array, config) {
         array[HOUR] = toInt(input);
         getParsingFlags(config).bigHour = true;
+    });
+    addParseToken('hmm', function (input, array, config) {
+        var pos = input.length - 2;
+        array[HOUR] = toInt(input.substr(0, pos));
+        array[MINUTE] = toInt(input.substr(pos));
+        getParsingFlags(config).bigHour = true;
+    });
+    addParseToken('hmmss', function (input, array, config) {
+        var pos1 = input.length - 4;
+        var pos2 = input.length - 2;
+        array[HOUR] = toInt(input.substr(0, pos1));
+        array[MINUTE] = toInt(input.substr(pos1, 2));
+        array[SECOND] = toInt(input.substr(pos2));
+        getParsingFlags(config).bigHour = true;
+    });
+    addParseToken('Hmm', function (input, array, config) {
+        var pos = input.length - 2;
+        array[HOUR] = toInt(input.substr(0, pos));
+        array[MINUTE] = toInt(input.substr(pos));
+    });
+    addParseToken('Hmmss', function (input, array, config) {
+        var pos1 = input.length - 4;
+        var pos2 = input.length - 2;
+        array[HOUR] = toInt(input.substr(0, pos1));
+        array[MINUTE] = toInt(input.substr(pos1, 2));
+        array[SECOND] = toInt(input.substr(pos2));
     });
 
     // LOCALES
@@ -12042,6 +11077,8 @@ module.provider('Restangular', function() {
     // this rule.
     var getSetHour = makeGetSet('Hours', true);
 
+    // FORMATTING
+
     addFormatToken('m', ['mm', 2], 0, 'minute');
 
     // ALIASES
@@ -12058,6 +11095,8 @@ module.provider('Restangular', function() {
 
     var getSetMinute = makeGetSet('Minutes', false);
 
+    // FORMATTING
+
     addFormatToken('s', ['ss', 2], 0, 'second');
 
     // ALIASES
@@ -12073,6 +11112,8 @@ module.provider('Restangular', function() {
     // MOMENTS
 
     var getSetSecond = makeGetSet('Seconds', false);
+
+    // FORMATTING
 
     addFormatToken('S', 0, 0, function () {
         return ~~(this.millisecond() / 100);
@@ -12129,6 +11170,8 @@ module.provider('Restangular', function() {
 
     var getSetMillisecond = makeGetSet('Milliseconds', false);
 
+    // FORMATTING
+
     addFormatToken('z',  0, 0, 'zoneAbbr');
     addFormatToken('zz', 0, 0, 'zoneName');
 
@@ -12144,40 +11187,43 @@ module.provider('Restangular', function() {
 
     var momentPrototype__proto = Moment.prototype;
 
-    momentPrototype__proto.add          = add_subtract__add;
-    momentPrototype__proto.calendar     = moment_calendar__calendar;
-    momentPrototype__proto.clone        = clone;
-    momentPrototype__proto.diff         = diff;
-    momentPrototype__proto.endOf        = endOf;
-    momentPrototype__proto.format       = format;
-    momentPrototype__proto.from         = from;
-    momentPrototype__proto.fromNow      = fromNow;
-    momentPrototype__proto.to           = to;
-    momentPrototype__proto.toNow        = toNow;
-    momentPrototype__proto.get          = getSet;
-    momentPrototype__proto.invalidAt    = invalidAt;
-    momentPrototype__proto.isAfter      = isAfter;
-    momentPrototype__proto.isBefore     = isBefore;
-    momentPrototype__proto.isBetween    = isBetween;
-    momentPrototype__proto.isSame       = isSame;
-    momentPrototype__proto.isValid      = moment_valid__isValid;
-    momentPrototype__proto.lang         = lang;
-    momentPrototype__proto.locale       = locale;
-    momentPrototype__proto.localeData   = localeData;
-    momentPrototype__proto.max          = prototypeMax;
-    momentPrototype__proto.min          = prototypeMin;
-    momentPrototype__proto.parsingFlags = parsingFlags;
-    momentPrototype__proto.set          = getSet;
-    momentPrototype__proto.startOf      = startOf;
-    momentPrototype__proto.subtract     = add_subtract__subtract;
-    momentPrototype__proto.toArray      = toArray;
-    momentPrototype__proto.toObject     = toObject;
-    momentPrototype__proto.toDate       = toDate;
-    momentPrototype__proto.toISOString  = moment_format__toISOString;
-    momentPrototype__proto.toJSON       = moment_format__toISOString;
-    momentPrototype__proto.toString     = toString;
-    momentPrototype__proto.unix         = unix;
-    momentPrototype__proto.valueOf      = to_type__valueOf;
+    momentPrototype__proto.add               = add_subtract__add;
+    momentPrototype__proto.calendar          = moment_calendar__calendar;
+    momentPrototype__proto.clone             = clone;
+    momentPrototype__proto.diff              = diff;
+    momentPrototype__proto.endOf             = endOf;
+    momentPrototype__proto.format            = format;
+    momentPrototype__proto.from              = from;
+    momentPrototype__proto.fromNow           = fromNow;
+    momentPrototype__proto.to                = to;
+    momentPrototype__proto.toNow             = toNow;
+    momentPrototype__proto.get               = getSet;
+    momentPrototype__proto.invalidAt         = invalidAt;
+    momentPrototype__proto.isAfter           = isAfter;
+    momentPrototype__proto.isBefore          = isBefore;
+    momentPrototype__proto.isBetween         = isBetween;
+    momentPrototype__proto.isSame            = isSame;
+    momentPrototype__proto.isSameOrAfter     = isSameOrAfter;
+    momentPrototype__proto.isSameOrBefore    = isSameOrBefore;
+    momentPrototype__proto.isValid           = moment_valid__isValid;
+    momentPrototype__proto.lang              = lang;
+    momentPrototype__proto.locale            = locale;
+    momentPrototype__proto.localeData        = localeData;
+    momentPrototype__proto.max               = prototypeMax;
+    momentPrototype__proto.min               = prototypeMin;
+    momentPrototype__proto.parsingFlags      = parsingFlags;
+    momentPrototype__proto.set               = getSet;
+    momentPrototype__proto.startOf           = startOf;
+    momentPrototype__proto.subtract          = add_subtract__subtract;
+    momentPrototype__proto.toArray           = toArray;
+    momentPrototype__proto.toObject          = toObject;
+    momentPrototype__proto.toDate            = toDate;
+    momentPrototype__proto.toISOString       = moment_format__toISOString;
+    momentPrototype__proto.toJSON            = toJSON;
+    momentPrototype__proto.toString          = toString;
+    momentPrototype__proto.unix              = unix;
+    momentPrototype__proto.valueOf           = to_type__valueOf;
+    momentPrototype__proto.creationData      = creationData;
 
     // Year
     momentPrototype__proto.year       = getSetYear;
@@ -12263,7 +11309,7 @@ module.provider('Restangular', function() {
 
     function locale_calendar__calendar (key, mom, now) {
         var output = this._calendar[key];
-        return typeof output === 'function' ? output.call(mom, now) : output;
+        return isFunction(output) ? output.call(mom, now) : output;
     }
 
     var defaultLongDateFormat = {
@@ -12325,21 +11371,21 @@ module.provider('Restangular', function() {
 
     function relative__relativeTime (number, withoutSuffix, string, isFuture) {
         var output = this._relativeTime[string];
-        return (typeof output === 'function') ?
+        return (isFunction(output)) ?
             output(number, withoutSuffix, string, isFuture) :
             output.replace(/%d/i, number);
     }
 
     function pastFuture (diff, output) {
         var format = this._relativeTime[diff > 0 ? 'future' : 'past'];
-        return typeof format === 'function' ? format(output) : format.replace(/%s/i, output);
+        return isFunction(format) ? format(output) : format.replace(/%s/i, output);
     }
 
     function locale_set__set (config) {
         var prop, i;
         for (i in config) {
             prop = config[i];
-            if (typeof prop === 'function') {
+            if (isFunction(prop)) {
                 this[i] = prop;
             } else {
                 this['_' + i] = prop;
@@ -12442,6 +11488,9 @@ module.provider('Restangular', function() {
     }
 
     locale_locales__getSetGlobalLocale('en', {
+        monthsParse : [/^jan/i, /^feb/i, /^mar/i, /^apr/i, /^may/i, /^jun/i, /^jul/i, /^aug/i, /^sep/i, /^oct/i, /^nov/i, /^dec/i],
+        longMonthsParse : [/^january$/i, /^february$/i, /^march$/i, /^april$/i, /^may$/i, /^june$/i, /^july$/i, /^august$/i, /^september$/i, /^october$/i, /^november$/i, /^december$/i],
+        shortMonthsParse : [/^jan$/i, /^feb$/i, /^mar$/i, /^apr$/i, /^may$/i, /^jun$/i, /^jul$/i, /^aug/i, /^sept?$/i, /^oct$/i, /^nov$/i, /^dec$/i],
         ordinalParse: /\d{1,2}(th|st|nd|rd)/,
         ordinal : function (number) {
             var b = number % 10,
@@ -12661,15 +11710,15 @@ module.provider('Restangular', function() {
         var years    = round(duration.as('y'));
 
         var a = seconds < thresholds.s && ['s', seconds]  ||
-                minutes === 1          && ['m']           ||
+                minutes <= 1           && ['m']           ||
                 minutes < thresholds.m && ['mm', minutes] ||
-                hours   === 1          && ['h']           ||
+                hours   <= 1           && ['h']           ||
                 hours   < thresholds.h && ['hh', hours]   ||
-                days    === 1          && ['d']           ||
+                days    <= 1           && ['d']           ||
                 days    < thresholds.d && ['dd', days]    ||
-                months  === 1          && ['M']           ||
+                months  <= 1           && ['M']           ||
                 months  < thresholds.M && ['MM', months]  ||
-                years   === 1          && ['y']           || ['yy', years];
+                years   <= 1           && ['y']           || ['yy', years];
 
         a[2] = withoutSuffix;
         a[3] = +posNegDuration > 0;
@@ -12790,6 +11839,8 @@ module.provider('Restangular', function() {
 
     // Side effect imports
 
+    // FORMATTING
+
     addFormatToken('X', 0, 0, 'unix');
     addFormatToken('x', 0, 0, 'valueOf');
 
@@ -12807,13 +11858,14 @@ module.provider('Restangular', function() {
     // Side effect imports
 
 
-    utils_hooks__hooks.version = '2.10.6';
+    utils_hooks__hooks.version = '2.11.0';
 
     setHookCallback(local__createLocal);
 
     utils_hooks__hooks.fn                    = momentPrototype;
     utils_hooks__hooks.min                   = min;
     utils_hooks__hooks.max                   = max;
+    utils_hooks__hooks.now                   = now;
     utils_hooks__hooks.utc                   = create_utc__createUTC;
     utils_hooks__hooks.unix                  = moment__createUnix;
     utils_hooks__hooks.months                = lists__listMonths;
@@ -12832,6 +11884,7 @@ module.provider('Restangular', function() {
     utils_hooks__hooks.weekdaysShort         = lists__listWeekdaysShort;
     utils_hooks__hooks.normalizeUnits        = normalizeUnits;
     utils_hooks__hooks.relativeTimeThreshold = duration_humanize__getSetRelativeTimeThreshold;
+    utils_hooks__hooks.prototype             = momentPrototype;
 
     var _moment = utils_hooks__hooks;
 
@@ -12842,8 +11895,9 @@ module.provider('Restangular', function() {
 //! locale : portuguese (pt)
 //! author : Jefferson : https://github.com/jalex79
 
-(function (global, factory) {
-   typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('../moment')) :
+;(function (global, factory) {
+   typeof exports === 'object' && typeof module !== 'undefined'
+       && typeof require === 'function' ? factory(require('../moment')) :
    typeof define === 'function' && define.amd ? define(['moment'], factory) :
    factory(global.moment)
 }(this, function (moment) { 'use strict';
@@ -13467,7 +12521,7 @@ module.provider('Restangular', function() {
 	return moment;
 }));
 
-/* angular-moment.js / v1.0.0-beta.2 / (c) 2013, 2014, 2015 Uri Shaked / MIT Licence */
+/* angular-moment.js / v1.0.0-beta.3 / (c) 2013, 2014, 2015 Uri Shaked / MIT Licence */
 
 'format amd';
 /* global define */
@@ -13479,7 +12533,23 @@ module.provider('Restangular', function() {
 		return angular.isUndefined(val) || val === null;
 	}
 
+	function requireMoment() {
+		try {
+			return require('moment'); // Using nw.js or browserify?
+		} catch (e) {
+			throw new Error('Please install moment via npm. Please reference to: https://github.com/urish/angular-moment'); // Add wiki/troubleshooting section?
+		}
+	}
+
 	function angularMoment(angular, moment) {
+
+		if(typeof moment === 'undefined') {
+			if(typeof require === 'function') {
+				moment = requireMoment();
+			}else{
+				throw new Error('Moment cannot be found by angular-moment! Please reference to: https://github.com/urish/angular-moment'); // Add wiki/troubleshooting section?
+			}
+		}
 
 		/**
 		 * @ngdoc overview
@@ -13654,6 +12724,7 @@ module.provider('Restangular', function() {
 					var modelName = attr.amTimeAgo;
 					var currentFrom;
 					var isTimeElement = ('TIME' === element[0].nodeName.toUpperCase());
+					var setTitleTime = !element.attr('title');
 
 					function getNow() {
 						var now;
@@ -13687,7 +12758,7 @@ module.provider('Restangular', function() {
 							element.text(momentInstance.from(getNow(), withoutSuffix));
 						}
 
-						if (titleFormat && !element.attr('title')) {
+						if (titleFormat && setTitleTime) {
 							element.attr('title', momentInstance.local().format(titleFormat));
 						}
 
@@ -14122,7 +13193,49 @@ module.provider('Restangular', function() {
 				amAddFilter.$stateful = angularMomentConfig.statefulFilters;
 
 				return amAddFilter;
-			}]);
+			}])
+
+		/**
+		 * @ngdoc filter
+		 * @name angularMoment.filter:amStartOf
+		 * @module angularMoment
+		 * @function
+		 */
+			.filter('amStartOf', ['moment', 'angularMomentConfig', function (moment, angularMomentConfig) {
+				function amStartOfFilter(value, type) {
+
+					if (isUndefinedOrNull(value)) {
+						return '';
+					}
+
+					return moment(value).startOf(type);
+				}
+
+				amStartOfFilter.$stateful = angularMomentConfig.statefulFilters;
+
+				return amStartOfFilter;
+			}])
+
+		/**
+		 * @ngdoc filter
+		 * @name angularMoment.filter:amEndOf
+		 * @module angularMoment
+		 * @function
+		 */
+			.filter('amEndOf', ['moment', 'angularMomentConfig', function (moment, angularMomentConfig) {
+				function amEndOfFilter(value, type) {
+
+					if (isUndefinedOrNull(value)) {
+						return '';
+					}
+
+					return moment(value).endOf(type);
+				}
+
+				amEndOfFilter.$stateful = angularMomentConfig.statefulFilters;
+
+				return amEndOfFilter;
+ 			}]);
 	}
 
 	if (typeof define === 'function' && define.amd) {
@@ -33538,11 +32651,11 @@ $templateCache.put("selectize/select.tpl.html","<div class=\"ui-select-container
  * Implementing Drag and Drop functionality in AngularJS is easier than ever.
  * Demo: http://codef0rmer.github.com/angular-dragdrop/
  * 
- * @version 1.0.12
+ * @version 1.0.13
  *
  * (c) 2013 Amit Gharat a.k.a codef0rmer <amit.2006.it@gmail.com> - amitgharat.wordpress.com
  */
-!function(e,t,a,n){"use strict";var i=t.module("ngDragDrop",[]).service("ngDragDropService",["$timeout","$parse","$q",function(r,l,o){this.draggableScope=null,this.droppableScope=null,a("head").prepend('<style type="text/css">@charset "UTF-8";.angular-dragdrop-hide{display: none !important;}</style>'),this.callEventCallback=function(e,t,n,i){function r(t){var n=-1!==t.indexOf("(")?t.indexOf("("):t.length,i=-1!==t.lastIndexOf(")")?t.lastIndexOf(")"):t.length,r=t.substring(n+1,i),o=-1!==t.indexOf(".")?t.substr(0,t.indexOf(".")):null;return o=e[o]&&"function"==typeof e[o].constructor?o:null,{callback:t.substring(o&&o.length+1||0,n),args:a.map(r&&r.split(",")||[],function(t){return[l(t)(e)]}),constructor:o}}if(t){var o=r(t),s=o.callback,d=o.constructor,p=[n,i].concat(o.args);return(e[s]||e[d][s]).apply(e,p)}},this.invokeDrop=function(e,l,s,d){var p,c,u,g="",f="",b={},h={},v=null,y={},x={},m=null,D=this.droppableScope,q=this.draggableScope,j=null,k=[];g=e.ngattr("ng-model"),f=l.ngattr("ng-model"),p=q.$eval(g),c=D.$eval(f),m=l.find("[jqyoui-draggable]:last,[data-jqyoui-draggable]:last"),h=D.$eval(l.attr("jqyoui-droppable")||l.attr("data-jqyoui-droppable"))||[],b=q.$eval(e.attr("jqyoui-draggable")||e.attr("data-jqyoui-draggable"))||[],b.index=this.fixIndex(q,b,p),h.index=this.fixIndex(D,h,c),v=t.isArray(p)?b.index:null,y=t.isArray(p)?p[v]:p,b.deepCopy&&(y=t.copy(y)),x=t.isArray(c)&&h&&h.index!==n?c[h.index]:t.isArray(c)?{}:c,h.deepCopy&&(x=t.copy(x)),b.beforeDrop&&k.push(this.callEventCallback(q,b.beforeDrop,s,d)),o.all(k).then(t.bind(this,function(){if(b.insertInline&&g===f){if(b.index>h.index){u=p[b.index];for(var n=b.index;n>h.index;n--)c[n]=t.copy(c[n-1]),c[n-1]={},c[n][b.direction]="left";c[h.index]=u}else{u=p[b.index];for(var n=b.index;n<h.index;n++)c[n]=t.copy(c[n+1]),c[n+1]={},c[n][b.direction]="right";c[h.index]=u}this.callEventCallback(D,h.onDrop,s,d)}else b.animate===!0?(j=e.clone(),j.css({position:"absolute"}).css(e.offset()),a("body").append(j),e.addClass("angular-dragdrop-hide"),this.move(j,m.length>0?m:l,null,"fast",h,function(){j.remove()}),this.move(m.length>0&&!h.multiple?m:[],e.parent("[jqyoui-droppable],[data-jqyoui-droppable]"),i.startXY,"fast",h,t.bind(this,function(){r(t.bind(this,function(){e.css({position:"relative",left:"",top:""}).removeClass("angular-dragdrop-hide"),m.css({position:"relative",left:"",top:"",display:"none"===m.css("display")?"":m.css("display")}),this.mutateDraggable(q,h,b,g,f,x,e),this.mutateDroppable(D,h,b,f,y,v),this.callEventCallback(D,h.onDrop,s,d)}))}))):r(t.bind(this,function(){this.mutateDraggable(q,h,b,g,f,x,e),this.mutateDroppable(D,h,b,f,y,v),this.callEventCallback(D,h.onDrop,s,d)}))}))["finally"](t.bind(this,function(){this.restore(e)}))},this.move=function(t,a,i,r,l,o){if(0===t.length)return o&&e.setTimeout(function(){o()},300),!1;var s=t.css("z-index"),d=t[l.containment||"offset"](),p=a.css("display"),c=a.hasClass("ng-hide");null===i&&a.length>0&&((a.attr("jqyoui-draggable")||a.attr("data-jqyoui-draggable"))!==n&&a.ngattr("ng-model")!==n&&a.is(":visible")&&l&&l.multiple?(i=a[l.containment||"offset"](),l.stack===!1?i.left+=a.outerWidth(!0):i.top+=a.outerHeight(!0)):(c&&a.removeClass("ng-hide"),i=a.css({visibility:"hidden",display:"block"})[l.containment||"offset"](),a.css({visibility:"",display:p}))),t.css({position:"absolute","z-index":9999}).css(d).animate(i,r,function(){c&&a.addClass("ng-hide"),t.css("z-index",s),o&&o()})},this.mutateDroppable=function(e,a,n,i,r,o){var s=e.$eval(i);e.dndDragItem=r,t.isArray(s)?(a&&a.index>=0?s[a.index]=r:s.push(r),n&&n.placeholder===!0&&(s[s.length-1].jqyoui_pos=o)):(l(i+" = dndDragItem")(e),n&&n.placeholder===!0&&(s.jqyoui_pos=o))},this.mutateDraggable=function(e,a,i,r,o,s,d){var p=t.equals(s,{})||!s,c=e.$eval(r);e.dndDropItem=s,i&&i.placeholder?"keep"!=i.placeholder&&(t.isArray(c)&&i.index!==n?c[i.index]=s:l(r+" = dndDropItem")(e)):t.isArray(c)?p?i&&i.placeholder!==!0&&"keep"!==i.placeholder&&c.splice(i.index,1):c[i.index]=s:(l(r+" = dndDropItem")(e),e.$parent&&l(r+" = dndDropItem")(e.$parent)),this.restore(d)},this.restore=function(e){e.css({"z-index":"",left:"",top:""})},this.fixIndex=function(e,a,i){if(a.applyFilter&&t.isArray(i)&&i.length>0){var r=e[a.applyFilter](),l=r[a.index],o=n;return i.forEach(function(e,a){t.equals(e,l)&&(o=a)}),o}return a.index}}]).directive("jqyouiDraggable",["ngDragDropService",function(e){return{require:"?jqyouiDroppable",restrict:"A",link:function(n,r,l){var o,s,d,p,c=a(r),u=function(r){r?(o=n.$eval(c.attr("jqyoui-draggable")||c.attr("data-jqyoui-draggable"))||{},s=n.$eval(l.jqyouiOptions)||{},c.draggable({disabled:!1}).draggable(s).draggable({start:function(t,r){e.draggableScope=n,d=a(s.helper?r.helper:this).css("z-index"),a(s.helper?r.helper:this).css("z-index",9999),i.startXY=a(this)[o.containment||"offset"](),e.callEventCallback(n,o.onStart,t,r)},stop:function(t,i){a(s.helper?i.helper:this).css("z-index",d),e.callEventCallback(n,o.onStop,t,i)},drag:function(t,a){e.callEventCallback(n,o.onDrag,t,a)}})):c.draggable({disabled:!0}),p&&t.isDefined(r)&&(t.equals(l.drag,"true")||t.equals(l.drag,"false"))&&(p(),p=null)};p=n.$watch(function(){return n.$eval(l.drag)},u),u(),c.on("$destroy",function(){c.draggable({disabled:!0}).draggable("destroy")})}}}]).directive("jqyouiDroppable",["ngDragDropService","$q",function(e,n){return{restrict:"A",priority:1,link:function(i,r,l){var o,s,d=a(r),p=function(r){r?(o=i.$eval(a(d).attr("jqyoui-droppable")||a(d).attr("data-jqyoui-droppable"))||{},d.droppable({disabled:!1}).droppable(i.$eval(l.jqyouiOptions)||{}).droppable({over:function(t,a){e.callEventCallback(i,o.onOver,t,a)},out:function(t,a){e.callEventCallback(i,o.onOut,t,a)},drop:function(r,s){var d=null;d=o.beforeDrop?e.callEventCallback(i,o.beforeDrop,r,s):function(){var e=n.defer();return e.resolve(),e.promise}(),d.then(t.bind(this,function(){a(s.draggable).ngattr("ng-model")&&l.ngModel?(e.droppableScope=i,e.invokeDrop(a(s.draggable),a(this),r,s)):e.callEventCallback(i,o.onDrop,r,s)}),function(){s.draggable.css({left:"",top:""})})}})):d.droppable({disabled:!0}),s&&t.isDefined(r)&&(t.equals(l.drop,"true")||t.equals(l.drop,"false"))&&(s(),s=null)};s=i.$watch(function(){return i.$eval(l.drop)},p),p(),d.on("$destroy",function(){d.droppable({disabled:!0}).droppable("destroy")})}}}]);a.fn.ngattr=function(e){var t=this[0];return t.getAttribute(e)||t.getAttribute("data-"+e)}}(window,window.angular,window.jQuery);
+!function(e,a,t,n){"use strict";var i=a.module("ngDragDrop",[]).service("ngDragDropService",["$timeout","$parse","$q",function(r,l,o){this.draggableScope=null,this.droppableScope=null,t("head").prepend('<style type="text/css">@charset "UTF-8";.angular-dragdrop-hide{display: none !important;}</style>'),this.callEventCallback=function(e,a,n,i){function r(a){var n=-1!==a.indexOf("(")?a.indexOf("("):a.length,i=-1!==a.lastIndexOf(")")?a.lastIndexOf(")"):a.length,r=a.substring(n+1,i),o=-1!==a.indexOf(".")?a.substr(0,a.indexOf(".")):null;return o=e[o]&&"function"==typeof e[o].constructor?o:null,{callback:a.substring(o&&o.length+1||0,n),args:t.map(r&&r.split(",")||[],function(a){return[l(a)(e)]}),constructor:o}}if(a){var o=r(a),d=o.callback,s=o.constructor,p=[n,i].concat(o.args);return(e[d]||e[s][d]).apply(e[d]?e:e[s],p)}},this.invokeDrop=function(e,l,d,s){var p,c,u,g="",f="",b={},h={},v=null,y={},x={},m=null,D=this.droppableScope,q=this.draggableScope,j=null,k=[];g=e.ngattr("ng-model"),f=l.ngattr("ng-model"),p=q.$eval(g),c=D.$eval(f),m=l.find("[jqyoui-draggable]:last,[data-jqyoui-draggable]:last"),h=D.$eval(l.attr("jqyoui-droppable")||l.attr("data-jqyoui-droppable"))||[],b=q.$eval(e.attr("jqyoui-draggable")||e.attr("data-jqyoui-draggable"))||[],b.index=this.fixIndex(q,b,p),h.index=this.fixIndex(D,h,c),v=a.isArray(p)?b.index:null,y=a.isArray(p)?p[v]:p,b.deepCopy&&(y=a.copy(y)),x=a.isArray(c)&&h&&h.index!==n?c[h.index]:a.isArray(c)?{}:c,h.deepCopy&&(x=a.copy(x)),b.beforeDrop&&k.push(this.callEventCallback(q,b.beforeDrop,d,s)),o.all(k).then(a.bind(this,function(){if(b.insertInline&&g===f){if(b.index>h.index){u=p[b.index];for(var n=b.index;n>h.index;n--)c[n]=a.copy(c[n-1]),c[n-1]={},c[n][b.direction]="left";c[h.index]=u}else{u=p[b.index];for(var n=b.index;n<h.index;n++)c[n]=a.copy(c[n+1]),c[n+1]={},c[n][b.direction]="right";c[h.index]=u}this.callEventCallback(D,h.onDrop,d,s)}else b.animate===!0?(j=e.clone(),j.css({position:"absolute"}).css(e.offset()),t("body").append(j),e.addClass("angular-dragdrop-hide"),this.move(j,m.length>0?m:l,null,"fast",h,function(){j.remove()}),this.move(m.length>0&&!h.multiple?m:[],e.parent("[jqyoui-droppable],[data-jqyoui-droppable]"),i.startXY,"fast",h,a.bind(this,function(){r(a.bind(this,function(){e.css({position:"relative",left:"",top:""}).removeClass("angular-dragdrop-hide"),m.css({position:"relative",left:"",top:"",display:"none"===m.css("display")?"":m.css("display")}),this.mutateDraggable(q,h,b,g,f,x,e),this.mutateDroppable(D,h,b,f,y,v),this.callEventCallback(D,h.onDrop,d,s)}))}))):r(a.bind(this,function(){this.mutateDraggable(q,h,b,g,f,x,e),this.mutateDroppable(D,h,b,f,y,v),this.callEventCallback(D,h.onDrop,d,s)}))}))["finally"](a.bind(this,function(){this.restore(e)}))},this.move=function(a,t,i,r,l,o){if(0===a.length)return o&&e.setTimeout(function(){o()},300),!1;var d=a.css("z-index"),s=a[l.containment||"offset"](),p=t.css("display"),c=t.hasClass("ng-hide"),u=t.hasClass("angular-dragdrop-hide");null===i&&t.length>0&&((t.attr("jqyoui-draggable")||t.attr("data-jqyoui-draggable"))!==n&&t.ngattr("ng-model")!==n&&t.is(":visible")&&l&&l.multiple?(i=t[l.containment||"offset"](),l.stack===!1?i.left+=t.outerWidth(!0):i.top+=t.outerHeight(!0)):(c&&t.removeClass("ng-hide"),u&&t.removeClass("angular-dragdrop-hide"),i=t.css({visibility:"hidden",display:"block"})[l.containment||"offset"](),t.css({visibility:"",display:p}))),a.css({position:"absolute","z-index":9999}).css(s).animate(i,r,function(){c&&t.addClass("ng-hide"),u&&t.addClass("angular-dragdrop-hide"),a.css("z-index",d),o&&o()})},this.mutateDroppable=function(e,t,n,i,r,o){var d=e.$eval(i);e.dndDragItem=r,a.isArray(d)?(t&&t.index>=0?d[t.index]=r:d.push(r),n&&n.placeholder===!0&&(d[d.length-1].jqyoui_pos=o)):(l(i+" = dndDragItem")(e),n&&n.placeholder===!0&&(d.jqyoui_pos=o))},this.mutateDraggable=function(e,t,i,r,o,d,s){var p=a.equals(d,{})||!d,c=e.$eval(r);e.dndDropItem=d,i&&i.placeholder?"keep"!=i.placeholder&&(a.isArray(c)&&i.index!==n?c[i.index]=d:l(r+" = dndDropItem")(e)):a.isArray(c)?p?i&&i.placeholder!==!0&&"keep"!==i.placeholder&&c.splice(i.index,1):c[i.index]=d:(l(r+" = dndDropItem")(e),e.$parent&&l(r+" = dndDropItem")(e.$parent)),this.restore(s)},this.restore=function(e){e.css({"z-index":"",left:"",top:""})},this.fixIndex=function(e,t,i){if(t.applyFilter&&a.isArray(i)&&i.length>0){var r=e[t.applyFilter](),l=r[t.index],o=n;return i.forEach(function(e,t){a.equals(e,l)&&(o=t)}),o}return t.index}}]).directive("jqyouiDraggable",["ngDragDropService",function(e){return{require:"?jqyouiDroppable",restrict:"A",link:function(n,r,l){var o,d,s,p,c=t(r),u=function(r,u){r?(o=n.$eval(c.attr("jqyoui-draggable")||c.attr("data-jqyoui-draggable"))||{},d=n.$eval(l.jqyouiOptions)||{},c.draggable({disabled:!1}).draggable(d).draggable({start:function(a,r){e.draggableScope=n,s=t(d.helper?r.helper:this).css("z-index"),t(d.helper?r.helper:this).css("z-index",9999),i.startXY=t(this)[o.containment||"offset"](),e.callEventCallback(n,o.onStart,a,r)},stop:function(a,i){t(d.helper?i.helper:this).css("z-index",s),e.callEventCallback(n,o.onStop,a,i)},drag:function(a,t){e.callEventCallback(n,o.onDrag,a,t)}})):c.draggable({disabled:!0}),p&&a.isDefined(r)&&(a.equals(l.drag,"true")||a.equals(l.drag,"false"))&&(p(),p=null)};p=n.$watch(function(){return n.$eval(l.drag)},u),u(),c.on("$destroy",function(){c.draggable({disabled:!0}).draggable("destroy")})}}}]).directive("jqyouiDroppable",["ngDragDropService","$q",function(e,n){return{restrict:"A",priority:1,link:function(i,r,l){var o,d,s,p=t(r),c=function(r,c){r?(o=i.$eval(t(p).attr("jqyoui-droppable")||t(p).attr("data-jqyoui-droppable"))||{},d=i.$eval(l.jqyouiOptions)||{},p.droppable({disabled:!1}).droppable(d).droppable({over:function(a,t){e.callEventCallback(i,o.onOver,a,t)},out:function(a,t){e.callEventCallback(i,o.onOut,a,t)},drop:function(r,s){var p=null;p=o.beforeDrop?e.callEventCallback(i,o.beforeDrop,r,s):function(){var e=n.defer();return e.resolve(),e.promise}(),p.then(a.bind(this,function(){t(s.draggable).ngattr("ng-model")&&l.ngModel?(e.droppableScope=i,e.invokeDrop(t(s.draggable),t(this),r,s)):e.callEventCallback(i,o.onDrop,r,s)}),function(){s.draggable.animate({left:"",top:""},d.revertDuration||0)})}})):p.droppable({disabled:!0}),s&&a.isDefined(r)&&(a.equals(l.drop,"true")||a.equals(l.drop,"false"))&&(s(),s=null)};s=i.$watch(function(){return i.$eval(l.drop)},c),c(),p.on("$destroy",function(){p.droppable({disabled:!0}).droppable("destroy")})}}}]);t.fn.ngattr=function(e,a){var t=this[0];return t.getAttribute(e)||t.getAttribute("data-"+e)}}(window,window.angular,window.jQuery);
 /**
  * @see http://docs.angularjs.org/guide/concepts
  * @see http://docs.angularjs.org/api/ng.directive:ngModel.NgModelController
@@ -33641,715 +32754,6 @@ angular.module('contenteditable', [])
       }
     }
   }}]);
-
-
-/* **********************************************
-     Begin prism-core.js
-********************************************** */
-
-var _self = (typeof window !== 'undefined')
-	? window   // if in browser
-	: (
-		(typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope)
-		? self // if in worker
-		: {}   // if in node js
-	);
-
-/**
- * Prism: Lightweight, robust, elegant syntax highlighting
- * MIT license http://www.opensource.org/licenses/mit-license.php/
- * @author Lea Verou http://lea.verou.me
- */
-
-var Prism = (function(){
-
-// Private helper vars
-var lang = /\blang(?:uage)?-(?!\*)(\w+)\b/i;
-
-var _ = _self.Prism = {
-	util: {
-		encode: function (tokens) {
-			if (tokens instanceof Token) {
-				return new Token(tokens.type, _.util.encode(tokens.content), tokens.alias);
-			} else if (_.util.type(tokens) === 'Array') {
-				return tokens.map(_.util.encode);
-			} else {
-				return tokens.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\u00a0/g, ' ');
-			}
-		},
-
-		type: function (o) {
-			return Object.prototype.toString.call(o).match(/\[object (\w+)\]/)[1];
-		},
-
-		// Deep clone a language definition (e.g. to extend it)
-		clone: function (o) {
-			var type = _.util.type(o);
-
-			switch (type) {
-				case 'Object':
-					var clone = {};
-
-					for (var key in o) {
-						if (o.hasOwnProperty(key)) {
-							clone[key] = _.util.clone(o[key]);
-						}
-					}
-
-					return clone;
-
-				case 'Array':
-					// Check for existence for IE8
-					return o.map && o.map(function(v) { return _.util.clone(v); });
-			}
-
-			return o;
-		}
-	},
-
-	languages: {
-		extend: function (id, redef) {
-			var lang = _.util.clone(_.languages[id]);
-
-			for (var key in redef) {
-				lang[key] = redef[key];
-			}
-
-			return lang;
-		},
-
-		/**
-		 * Insert a token before another token in a language literal
-		 * As this needs to recreate the object (we cannot actually insert before keys in object literals),
-		 * we cannot just provide an object, we need anobject and a key.
-		 * @param inside The key (or language id) of the parent
-		 * @param before The key to insert before. If not provided, the function appends instead.
-		 * @param insert Object with the key/value pairs to insert
-		 * @param root The object that contains `inside`. If equal to Prism.languages, it can be omitted.
-		 */
-		insertBefore: function (inside, before, insert, root) {
-			root = root || _.languages;
-			var grammar = root[inside];
-			
-			if (arguments.length == 2) {
-				insert = arguments[1];
-				
-				for (var newToken in insert) {
-					if (insert.hasOwnProperty(newToken)) {
-						grammar[newToken] = insert[newToken];
-					}
-				}
-				
-				return grammar;
-			}
-			
-			var ret = {};
-
-			for (var token in grammar) {
-
-				if (grammar.hasOwnProperty(token)) {
-
-					if (token == before) {
-
-						for (var newToken in insert) {
-
-							if (insert.hasOwnProperty(newToken)) {
-								ret[newToken] = insert[newToken];
-							}
-						}
-					}
-
-					ret[token] = grammar[token];
-				}
-			}
-			
-			// Update references in other language definitions
-			_.languages.DFS(_.languages, function(key, value) {
-				if (value === root[inside] && key != inside) {
-					this[key] = ret;
-				}
-			});
-
-			return root[inside] = ret;
-		},
-
-		// Traverse a language definition with Depth First Search
-		DFS: function(o, callback, type) {
-			for (var i in o) {
-				if (o.hasOwnProperty(i)) {
-					callback.call(o, i, o[i], type || i);
-
-					if (_.util.type(o[i]) === 'Object') {
-						_.languages.DFS(o[i], callback);
-					}
-					else if (_.util.type(o[i]) === 'Array') {
-						_.languages.DFS(o[i], callback, i);
-					}
-				}
-			}
-		}
-	},
-	plugins: {},
-	
-	highlightAll: function(async, callback) {
-		var elements = document.querySelectorAll('code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code');
-
-		for (var i=0, element; element = elements[i++];) {
-			_.highlightElement(element, async === true, callback);
-		}
-	},
-
-	highlightElement: function(element, async, callback) {
-		// Find language
-		var language, grammar, parent = element;
-
-		while (parent && !lang.test(parent.className)) {
-			parent = parent.parentNode;
-		}
-
-		if (parent) {
-			language = (parent.className.match(lang) || [,''])[1];
-			grammar = _.languages[language];
-		}
-
-		// Set language on the element, if not present
-		element.className = element.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
-
-		// Set language on the parent, for styling
-		parent = element.parentNode;
-
-		if (/pre/i.test(parent.nodeName)) {
-			parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
-		}
-
-		var code = element.textContent;
-
-		var env = {
-			element: element,
-			language: language,
-			grammar: grammar,
-			code: code
-		};
-
-		if (!code || !grammar) {
-			_.hooks.run('complete', env);
-			return;
-		}
-
-		_.hooks.run('before-highlight', env);
-
-		if (async && _self.Worker) {
-			var worker = new Worker(_.filename);
-
-			worker.onmessage = function(evt) {
-				env.highlightedCode = evt.data;
-
-				_.hooks.run('before-insert', env);
-
-				env.element.innerHTML = env.highlightedCode;
-
-				callback && callback.call(env.element);
-				_.hooks.run('after-highlight', env);
-				_.hooks.run('complete', env);
-			};
-
-			worker.postMessage(JSON.stringify({
-				language: env.language,
-				code: env.code,
-				immediateClose: true
-			}));
-		}
-		else {
-			env.highlightedCode = _.highlight(env.code, env.grammar, env.language);
-
-			_.hooks.run('before-insert', env);
-
-			env.element.innerHTML = env.highlightedCode;
-
-			callback && callback.call(element);
-
-			_.hooks.run('after-highlight', env);
-			_.hooks.run('complete', env);
-		}
-	},
-
-	highlight: function (text, grammar, language) {
-		var tokens = _.tokenize(text, grammar);
-		return Token.stringify(_.util.encode(tokens), language);
-	},
-
-	tokenize: function(text, grammar, language) {
-		var Token = _.Token;
-
-		var strarr = [text];
-
-		var rest = grammar.rest;
-
-		if (rest) {
-			for (var token in rest) {
-				grammar[token] = rest[token];
-			}
-
-			delete grammar.rest;
-		}
-
-		tokenloop: for (var token in grammar) {
-			if(!grammar.hasOwnProperty(token) || !grammar[token]) {
-				continue;
-			}
-
-			var patterns = grammar[token];
-			patterns = (_.util.type(patterns) === "Array") ? patterns : [patterns];
-
-			for (var j = 0; j < patterns.length; ++j) {
-				var pattern = patterns[j],
-					inside = pattern.inside,
-					lookbehind = !!pattern.lookbehind,
-					lookbehindLength = 0,
-					alias = pattern.alias;
-
-				pattern = pattern.pattern || pattern;
-
-				for (var i=0; i<strarr.length; i++) { // Don’t cache length as it changes during the loop
-
-					var str = strarr[i];
-
-					if (strarr.length > text.length) {
-						// Something went terribly wrong, ABORT, ABORT!
-						break tokenloop;
-					}
-
-					if (str instanceof Token) {
-						continue;
-					}
-
-					pattern.lastIndex = 0;
-
-					var match = pattern.exec(str);
-
-					if (match) {
-						if(lookbehind) {
-							lookbehindLength = match[1].length;
-						}
-
-						var from = match.index - 1 + lookbehindLength,
-							match = match[0].slice(lookbehindLength),
-							len = match.length,
-							to = from + len,
-							before = str.slice(0, from + 1),
-							after = str.slice(to + 1);
-
-						var args = [i, 1];
-
-						if (before) {
-							args.push(before);
-						}
-
-						var wrapped = new Token(token, inside? _.tokenize(match, inside) : match, alias);
-
-						args.push(wrapped);
-
-						if (after) {
-							args.push(after);
-						}
-
-						Array.prototype.splice.apply(strarr, args);
-					}
-				}
-			}
-		}
-
-		return strarr;
-	},
-
-	hooks: {
-		all: {},
-
-		add: function (name, callback) {
-			var hooks = _.hooks.all;
-
-			hooks[name] = hooks[name] || [];
-
-			hooks[name].push(callback);
-		},
-
-		run: function (name, env) {
-			var callbacks = _.hooks.all[name];
-
-			if (!callbacks || !callbacks.length) {
-				return;
-			}
-
-			for (var i=0, callback; callback = callbacks[i++];) {
-				callback(env);
-			}
-		}
-	}
-};
-
-var Token = _.Token = function(type, content, alias) {
-	this.type = type;
-	this.content = content;
-	this.alias = alias;
-};
-
-Token.stringify = function(o, language, parent) {
-	if (typeof o == 'string') {
-		return o;
-	}
-
-	if (_.util.type(o) === 'Array') {
-		return o.map(function(element) {
-			return Token.stringify(element, language, o);
-		}).join('');
-	}
-
-	var env = {
-		type: o.type,
-		content: Token.stringify(o.content, language, parent),
-		tag: 'span',
-		classes: ['token', o.type],
-		attributes: {},
-		language: language,
-		parent: parent
-	};
-
-	if (env.type == 'comment') {
-		env.attributes['spellcheck'] = 'true';
-	}
-
-	if (o.alias) {
-		var aliases = _.util.type(o.alias) === 'Array' ? o.alias : [o.alias];
-		Array.prototype.push.apply(env.classes, aliases);
-	}
-
-	_.hooks.run('wrap', env);
-
-	var attributes = '';
-
-	for (var name in env.attributes) {
-		attributes += (attributes ? ' ' : '') + name + '="' + (env.attributes[name] || '') + '"';
-	}
-
-	return '<' + env.tag + ' class="' + env.classes.join(' ') + '" ' + attributes + '>' + env.content + '</' + env.tag + '>';
-
-};
-
-if (!_self.document) {
-	if (!_self.addEventListener) {
-		// in Node.js
-		return _self.Prism;
-	}
- 	// In worker
-	_self.addEventListener('message', function(evt) {
-		var message = JSON.parse(evt.data),
-		    lang = message.language,
-		    code = message.code,
-		    immediateClose = message.immediateClose;
-
-		_self.postMessage(_.highlight(code, _.languages[lang], lang));
-		if (immediateClose) {
-			_self.close();
-		}
-	}, false);
-
-	return _self.Prism;
-}
-
-// Get current script and highlight
-var script = document.getElementsByTagName('script');
-
-script = script[script.length - 1];
-
-if (script) {
-	_.filename = script.src;
-
-	if (document.addEventListener && !script.hasAttribute('data-manual')) {
-		document.addEventListener('DOMContentLoaded', _.highlightAll);
-	}
-}
-
-return _self.Prism;
-
-})();
-
-if (typeof module !== 'undefined' && module.exports) {
-	module.exports = Prism;
-}
-
-// hack for components to work correctly in node.js
-if (typeof global !== 'undefined') {
-	global.Prism = Prism;
-}
-
-
-/* **********************************************
-     Begin prism-markup.js
-********************************************** */
-
-Prism.languages.markup = {
-	'comment': /<!--[\w\W]*?-->/,
-	'prolog': /<\?[\w\W]+?\?>/,
-	'doctype': /<!DOCTYPE[\w\W]+?>/,
-	'cdata': /<!\[CDATA\[[\w\W]*?]]>/i,
-	'tag': {
-		pattern: /<\/?(?!\d)[^\s>\/=.$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\\1|\\?(?!\1)[\w\W])*\1|[^\s'">=]+))?)*\s*\/?>/i,
-		inside: {
-			'tag': {
-				pattern: /^<\/?[^\s>\/]+/i,
-				inside: {
-					'punctuation': /^<\/?/,
-					'namespace': /^[^\s>\/:]+:/
-				}
-			},
-			'attr-value': {
-				pattern: /=(?:('|")[\w\W]*?(\1)|[^\s>]+)/i,
-				inside: {
-					'punctuation': /[=>"']/
-				}
-			},
-			'punctuation': /\/?>/,
-			'attr-name': {
-				pattern: /[^\s>\/]+/,
-				inside: {
-					'namespace': /^[^\s>\/:]+:/
-				}
-			}
-
-		}
-	},
-	'entity': /&#?[\da-z]{1,8};/i
-};
-
-// Plugin to make entity title show the real entity, idea by Roman Komarov
-Prism.hooks.add('wrap', function(env) {
-
-	if (env.type === 'entity') {
-		env.attributes['title'] = env.content.replace(/&amp;/, '&');
-	}
-});
-
-Prism.languages.xml = Prism.languages.markup;
-Prism.languages.html = Prism.languages.markup;
-Prism.languages.mathml = Prism.languages.markup;
-Prism.languages.svg = Prism.languages.markup;
-
-
-/* **********************************************
-     Begin prism-css.js
-********************************************** */
-
-Prism.languages.css = {
-	'comment': /\/\*[\w\W]*?\*\//,
-	'atrule': {
-		pattern: /@[\w-]+?.*?(;|(?=\s*\{))/i,
-		inside: {
-			'rule': /@[\w-]+/
-			// See rest below
-		}
-	},
-	'url': /url\((?:(["'])(\\(?:\r\n|[\w\W])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
-	'selector': /[^\{\}\s][^\{\};]*?(?=\s*\{)/,
-	'string': /("|')(\\(?:\r\n|[\w\W])|(?!\1)[^\\\r\n])*\1/,
-	'property': /(\b|\B)[\w-]+(?=\s*:)/i,
-	'important': /\B!important\b/i,
-	'function': /[-a-z0-9]+(?=\()/i,
-	'punctuation': /[(){};:]/
-};
-
-Prism.languages.css['atrule'].inside.rest = Prism.util.clone(Prism.languages.css);
-
-if (Prism.languages.markup) {
-	Prism.languages.insertBefore('markup', 'tag', {
-		'style': {
-			pattern: /(<style[\w\W]*?>)[\w\W]*?(?=<\/style>)/i,
-			lookbehind: true,
-			inside: Prism.languages.css,
-			alias: 'language-css'
-		}
-	});
-	
-	Prism.languages.insertBefore('inside', 'attr-value', {
-		'style-attr': {
-			pattern: /\s*style=("|').*?\1/i,
-			inside: {
-				'attr-name': {
-					pattern: /^\s*style/i,
-					inside: Prism.languages.markup.tag.inside
-				},
-				'punctuation': /^\s*=\s*['"]|['"]\s*$/,
-				'attr-value': {
-					pattern: /.+/i,
-					inside: Prism.languages.css
-				}
-			},
-			alias: 'language-css'
-		}
-	}, Prism.languages.markup.tag);
-}
-
-/* **********************************************
-     Begin prism-clike.js
-********************************************** */
-
-Prism.languages.clike = {
-	'comment': [
-		{
-			pattern: /(^|[^\\])\/\*[\w\W]*?\*\//,
-			lookbehind: true
-		},
-		{
-			pattern: /(^|[^\\:])\/\/.*/,
-			lookbehind: true
-		}
-	],
-	'string': /(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
-	'class-name': {
-		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,
-		lookbehind: true,
-		inside: {
-			punctuation: /(\.|\\)/
-		}
-	},
-	'keyword': /\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
-	'boolean': /\b(true|false)\b/,
-	'function': /[a-z0-9_]+(?=\()/i,
-	'number': /\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)\b/i,
-	'operator': /--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&?|\|\|?|\?|\*|\/|~|\^|%/,
-	'punctuation': /[{}[\];(),.:]/
-};
-
-
-/* **********************************************
-     Begin prism-javascript.js
-********************************************** */
-
-Prism.languages.javascript = Prism.languages.extend('clike', {
-	'keyword': /\b(as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
-	'number': /\b-?(0x[\dA-Fa-f]+|0b[01]+|0o[0-7]+|\d*\.?\d+([Ee][+-]?\d+)?|NaN|Infinity)\b/,
-	// Allow for all non-ASCII characters (See http://stackoverflow.com/a/2008444)
-	'function': /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*(?=\()/i
-});
-
-Prism.languages.insertBefore('javascript', 'keyword', {
-	'regex': {
-		pattern: /(^|[^/])\/(?!\/)(\[.+?]|\\.|[^/\\\r\n])+\/[gimyu]{0,5}(?=\s*($|[\r\n,.;})]))/,
-		lookbehind: true
-	}
-});
-
-Prism.languages.insertBefore('javascript', 'class-name', {
-	'template-string': {
-		pattern: /`(?:\\`|\\?[^`])*`/,
-		inside: {
-			'interpolation': {
-				pattern: /\$\{[^}]+\}/,
-				inside: {
-					'interpolation-punctuation': {
-						pattern: /^\$\{|\}$/,
-						alias: 'punctuation'
-					},
-					rest: Prism.languages.javascript
-				}
-			},
-			'string': /[\s\S]+/
-		}
-	}
-});
-
-if (Prism.languages.markup) {
-	Prism.languages.insertBefore('markup', 'tag', {
-		'script': {
-			pattern: /(<script[\w\W]*?>)[\w\W]*?(?=<\/script>)/i,
-			lookbehind: true,
-			inside: Prism.languages.javascript,
-			alias: 'language-javascript'
-		}
-	});
-}
-
-Prism.languages.js = Prism.languages.javascript;
-
-/* **********************************************
-     Begin prism-file-highlight.js
-********************************************** */
-
-(function () {
-	if (typeof self === 'undefined' || !self.Prism || !self.document || !document.querySelector) {
-		return;
-	}
-
-	self.Prism.fileHighlight = function() {
-
-		var Extensions = {
-			'js': 'javascript',
-			'html': 'markup',
-			'svg': 'markup',
-			'xml': 'markup',
-			'py': 'python',
-			'rb': 'ruby',
-			'ps1': 'powershell',
-			'psm1': 'powershell'
-		};
-
-		if(Array.prototype.forEach) { // Check to prevent error in IE8
-			Array.prototype.slice.call(document.querySelectorAll('pre[data-src]')).forEach(function (pre) {
-				var src = pre.getAttribute('data-src');
-
-				var language, parent = pre;
-				var lang = /\blang(?:uage)?-(?!\*)(\w+)\b/i;
-				while (parent && !lang.test(parent.className)) {
-					parent = parent.parentNode;
-				}
-
-				if (parent) {
-					language = (pre.className.match(lang) || [, ''])[1];
-				}
-
-				if (!language) {
-					var extension = (src.match(/\.(\w+)$/) || [, ''])[1];
-					language = Extensions[extension] || extension;
-				}
-
-				var code = document.createElement('code');
-				code.className = 'language-' + language;
-
-				pre.textContent = '';
-
-				code.textContent = 'Loading…';
-
-				pre.appendChild(code);
-
-				var xhr = new XMLHttpRequest();
-
-				xhr.open('GET', src, true);
-
-				xhr.onreadystatechange = function () {
-					if (xhr.readyState == 4) {
-
-						if (xhr.status < 400 && xhr.responseText) {
-							code.textContent = xhr.responseText;
-
-							Prism.highlightElement(code);
-						}
-						else if (xhr.status >= 400) {
-							code.textContent = '✖ Error ' + xhr.status + ' while fetching file: ' + xhr.statusText;
-						}
-						else {
-							code.textContent = '✖ Error: File does not exist or is empty';
-						}
-					}
-				};
-
-				xhr.send(null);
-			});
-		}
-
-	};
-
-	self.Prism.fileHighlight();
-
-})();
 
 /*!
  * ngTagsInput v3.0.0
@@ -35503,15 +33907,15 @@ tagsInput.run(["$templateCache", function($templateCache) {
 
 }());
 /*!
- * Angular Socialshare v0.1.14
+ * Angular Socialshare v0.1.20
  *
  * Released by 720kb.net under the MIT license
  * www.opensource.org/licenses/MIT
  *
- * 2015-09-28
+ * 2015-12-17
  * source link: //github.com/720kb/angular-socialshare
  */
 
 
-!function(a){"use strict";a.module("720kb.socialshare",[]).directive("socialshare",["$window","$location",function(a,b){return{restrict:"A",link:function(c,d,e){var f,g,h={},i={url:"",redirectUri:"",provider:"",type:"",text:"",caption:"",to:"",ref:"",display:"",from:"",media:"",hashtags:"",via:"",description:"",source:"",subreddit:"",popupHeight:500,popupWidth:500};for(f in i)i.hasOwnProperty(f)&&(g="socialshare"+f.substring(0,1).toUpperCase()+f.substring(1),function(a){e.$observe(g,function(b){b&&(h[a]=b)})}(f),void 0===h[f]&&(h[f]=i[f]));h.eventTrigger=e.socialshareTrigger||"click",c.facebookShare=function(c){if(c.type&&"feed"===c.type){var d="https://www.facebook.com/dialog/feed?display=popup&app_id="+encodeURI(c.via)+"&redirect_uri="+encodeURI(c.redirectUri);c.url&&(d+="&link="+encodeURIComponent(c.url)),c.to&&(d+="&to="+encodeURIComponent(c.to)),c.display&&(d+="&display="+encodeURIComponent(c.display)),c.ref&&(d+="&ref="+encodeURIComponent(c.ref)),c.from&&(d+="&from="+encodeURIComponent(c.from)),c.description&&(d+="&description="+encodeURIComponent(c.description)),c.text&&(d+="&name="+encodeURIComponent(c.text)),c.caption&&(d+="&caption="+encodeURIComponent(c.caption)),c.media&&(d+="&picture="+encodeURIComponent(c.media)),c.source&&(d+="&source="+encodeURIComponent(c.source)),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)}else a.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.twitterShare=function(c){var d="https://www.twitter.com/intent/tweet?";c.text&&(d+="text="+encodeURIComponent(c.text)),c.via&&(d+="&via="+encodeURI(c.via)),c.hashtags&&(d+="&hashtags="+encodeURI(c.hashtags)),d+="&url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.googlePlusShare=function(c){a.open("https://plus.google.com/share?url="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.redditShare=function(c){var d="https://www.reddit.com/";d+=c.subreddit?"r/"+c.subreddit+"/submit?url=":"submit?url=",c.popupWidth<900&&(c.popupWidth=900),c.popupHeight<650&&(c.popupHeight=650),a.open(d+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.stumbleuponShare=function(c){a.open("https://www.stumbleupon.com/submit?url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.linkedinShare=function(c){a.open("https://www.linkedin.com/shareArticle?mini=true&url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.pinterestShare=function(c){a.open("https://www.pinterest.com/pin/create/button/?url="+encodeURIComponent(c.url||b.absUrl())+"&media="+encodeURI(c.media)+"&description="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.diggShare=function(c){a.open("https://www.digg.com/submit?url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.tumblrShare=function(b){if(b.media){var c="https://www.tumblr.com/share/photo?source="+encodeURIComponent(b.media);b.text&&(c+="&caption="+encodeURIComponent(b.text)),a.open(c,"sharer","toolbar=0,status=0,width="+b.popupWidth+",height="+b.popupHeight)}else a.open("https://www.tumblr.com/share/link?url="+encodeURIComponent(b.url)+"&description="+encodeURIComponent(b.text),"sharer","toolbar=0,status=0,width="+b.popupWidth+",height="+b.popupHeight)},c.vkShare=function(c){a.open("https://www.vk.com/share.php?url="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.deliciousShare=function(c){a.open("https://www.delicious.com/save?v=5&noui&jump=close&url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.bufferShare=function(c){var d="https://bufferapp.com/add?";c.text&&(d+="text="+encodeURIComponent(c.text)),c.via&&(d+="&via="+encodeURI(c.via)),d+="&url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},d.bind(h.eventTrigger,function(){switch(h.provider){case"facebook":c.facebookShare(h);break;case"google+":c.googlePlusShare(h);break;case"twitter":c.twitterShare(h);break;case"stumbleupon":c.stumbleuponShare(h);break;case"reddit":c.redditShare(h);break;case"pinterest":c.pinterestShare(h);break;case"linkedin":c.linkedinShare(h);break;case"digg":c.diggShare(h);break;case"tumblr":c.tumblrShare(h);break;case"delicious":c.deliciousShare(h);break;case"vk":c.vkShare(h);break;case"buffer":c.bufferShare(h);break;default:return}})}}}])}(angular);
+!function(a){"use strict";a.module("720kb.socialshare",[]).directive("socialshare",["$window","$location",function(a,b){return{restrict:"A",link:function(c,d,e){var f,g,h={},i={url:"",redirectUri:"",provider:"",type:"",text:"",caption:"",to:"",ref:"",display:"",from:"",media:"",hashtags:"",via:"",description:"",source:"",subreddit:"",follow:"",popupHeight:500,popupWidth:500};for(f in i)i.hasOwnProperty(f)&&(g="socialshare"+f.substring(0,1).toUpperCase()+f.substring(1),function(a){e.$observe(g,function(b){b&&(h[a]=b)})}(f),void 0===h[f]&&(h[f]=i[f]));h.eventTrigger=e.socialshareTrigger||"click",c.facebookShare=function(c){if(c.type&&"feed"===c.type){var d="https://www.facebook.com/dialog/feed?display=popup&app_id="+encodeURI(c.via)+"&redirect_uri="+encodeURI(c.redirectUri);c.url&&(d+="&link="+encodeURIComponent(c.url)),c.to&&(d+="&to="+encodeURIComponent(c.to)),c.display&&(d+="&display="+encodeURIComponent(c.display)),c.ref&&(d+="&ref="+encodeURIComponent(c.ref)),c.from&&(d+="&from="+encodeURIComponent(c.from)),c.description&&(d+="&description="+encodeURIComponent(c.description)),c.text&&(d+="&name="+encodeURIComponent(c.text)),c.caption&&(d+="&caption="+encodeURIComponent(c.caption)),c.media&&(d+="&picture="+encodeURIComponent(c.media)),c.source&&(d+="&source="+encodeURIComponent(c.source)),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)}else a.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.twitterShare=function(c){var d="https://www.twitter.com/intent/tweet?";c.text&&(d+="text="+encodeURIComponent(c.text)),c.via&&(d+="&via="+encodeURI(c.via)),c.hashtags&&(d+="&hashtags="+encodeURI(c.hashtags)),d+="&url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.googlePlusShare=function(c){a.open("https://plus.google.com/share?url="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.redditShare=function(c){var d="https://www.reddit.com/";d+=c.subreddit?"r/"+c.subreddit+"/submit?url=":"submit?url=",c.popupWidth<900&&(c.popupWidth=900),c.popupHeight<650&&(c.popupHeight=650),a.open(d+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.stumbleuponShare=function(c){a.open("https://www.stumbleupon.com/submit?url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.linkedinShare=function(c){var d="https://www.linkedin.com/shareArticle?mini=true";d+="&url="+encodeURIComponent(c.url||b.absUrl()),c.text&&(d+="&title="+encodeURIComponent(c.text)),c.description&&(d+="&summary="+encodeURIComponent(c.description)),c.source&&(d+="&source="+encodeURIComponent(c.source)),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.pinterestShare=function(c){a.open("https://www.pinterest.com/pin/create/button/?url="+encodeURIComponent(c.url||b.absUrl())+"&media="+encodeURI(c.media)+"&description="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.diggShare=function(c){a.open("https://www.digg.com/submit?url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.tumblrShare=function(b){if(b.media){var c="https://www.tumblr.com/share/photo?source="+encodeURIComponent(b.media);b.text&&(c+="&caption="+encodeURIComponent(b.text)),a.open(c,"sharer","toolbar=0,status=0,width="+b.popupWidth+",height="+b.popupHeight)}else a.open("https://www.tumblr.com/share/link?url="+encodeURIComponent(b.url)+"&description="+encodeURIComponent(b.text),"sharer","toolbar=0,status=0,width="+b.popupWidth+",height="+b.popupHeight)},c.vkShare=function(c){a.open("https://www.vk.com/share.php?url="+encodeURIComponent(c.url||b.absUrl()),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.deliciousShare=function(c){a.open("https://www.delicious.com/save?v=5&noui&jump=close&url="+encodeURIComponent(c.url||b.absUrl())+"&title="+encodeURIComponent(c.text),"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.bufferShare=function(c){var d="https://bufferapp.com/add?";c.text&&(d+="text="+encodeURIComponent(c.text)),c.via&&(d+="&via="+encodeURI(c.via)),d+="&url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.hackernewsShare=function(c){var d="https://news.ycombinator.com/submitlink?";c.text&&(d+="t="+encodeURIComponent(c.text)+"&"),d+="u="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.flipboardShare=function(c){var d="https://share.flipboard.com/bookmarklet/popout?v=2&";c.text&&(d+="title="+encodeURIComponent(c.text)+"&"),d+="url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.pocketShare=function(c){var d="https://getpocket.com/save?";c.text&&(d+="text="+encodeURIComponent(c.text)+"&"),d+="url="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.wordpressShare=function(c){var d="http://wordpress.com/press-this.php?";c.text&&(d+="t="+encodeURIComponent(c.text)+"&"),c.media&&(d+="i="+encodeURIComponent(c.media)+"&"),d+="u="+encodeURIComponent(c.url||b.absUrl()),a.open(d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},c.xingShare=function(c){var d="";c.follow&&(d="&follow_url="+encodeURIComponent(c.follow)),a.open("https://www.xing.com/spi/shares/new?url="+encodeURIComponent(c.url||b.absUrl())+d,"sharer","toolbar=0,status=0,width="+c.popupWidth+",height="+c.popupHeight)},d.bind(h.eventTrigger,function(){switch(h.provider){case"facebook":c.facebookShare(h);break;case"google+":c.googlePlusShare(h);break;case"twitter":c.twitterShare(h);break;case"stumbleupon":c.stumbleuponShare(h);break;case"reddit":c.redditShare(h);break;case"pinterest":c.pinterestShare(h);break;case"linkedin":c.linkedinShare(h);break;case"digg":c.diggShare(h);break;case"tumblr":c.tumblrShare(h);break;case"delicious":c.deliciousShare(h);break;case"vk":c.vkShare(h);break;case"buffer":c.bufferShare(h);break;case"pocket":c.pocketShare(h);break;case"wordpress":c.wordpressShare(h);break;case"flipboard":c.flipboardShare(h);break;case"hackernews":c.hackernewsShare(h);break;case"xing":c.xingShare(h);break;default:return}})}}}])}(angular);
 //# sourceMappingURL=angular-socialshare.sourcemap.map

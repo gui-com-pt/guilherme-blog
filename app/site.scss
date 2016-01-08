@@ -37,6 +37,25 @@ $susy: (
 }
 
 
+/*
+ * Tables
+ */
+.pi-table-data {
+  @extend pi-table-data;
+  width: 100%;
+}
+
+.pi-table__head {
+background-color: $color-gray;
+
+  > td {
+    background-color: $color-gray;
+    padding: 7px;
+    text-align: center;
+    font-weight: 400;
+  }
+}
+
 body {
   margin-top: 42px;
 }
@@ -121,13 +140,20 @@ button, input[type="button"] {
   margin-right: auto;
   padding-top: $pi-nav-height + 5px;
 }
+.masonry-brick__wrapper  > .masonry-brick {
+  width: 100%;
+}
 @include breakpoint($breakpoint-medium) {
-	.sidebar-right {
-		@include span(1 of 5 last);
-	}
-	.content {
-		@include span(4 of 5);
-	}
+  .masonry-brick__wrapper  > .masonry-brick {
+    width: 50%;
+  }
+
+  .sidebar-right {
+    @include span(1 of 5 last);
+  }
+  .content {
+    @include span(4 of 5);
+  }
 
 }
 @include breakpoint($breakpoint-site) {
@@ -135,12 +161,12 @@ button, input[type="button"] {
     width: 25%;
   }
 
-	.sidebar-right {
-		@include span(2 of 10 last);
-	}
-	.content {
-		@include span(8 of 10);
-	}
+  .sidebar-right {
+    @include span(2 of 10 last);
+  }
+  .content {
+    @include span(8 of 10);
+  }
 
   .noauth-form__login {
       @include span(1 of 4);

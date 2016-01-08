@@ -37,6 +37,7 @@
       <ul>
             <li><a ui-sref="article-list({categoryId: null, name: null})" ui-sref-opts="{reload: true}">guilherme.ovh</a></li>
             <li><a target="_blank" href="https://codigo.ovh">my portuguese blog</a></li>
+            <li><a ui-sref="cv">curriculum vitae</a></li>
             <li ng-show="$root.isAuthenticated"><a ui-sref="question-list">Perguntas</a></li>
             <li ng-show="$root.isAuthenticated"><a href="">Gestão</a>
                 <ul>
@@ -62,20 +63,18 @@
           </div>
   </div>
   <div class="pi-nav__wrapper pi-nav__sub">
-  <div class="pi-nav">
-  <ul>
-    <li ng-repeat="cat in $root.categories"><a ui-sref="article-list({categoryId: cat.id, name: null})" ng-bind="cat.displayName"></a></li>
-    </ul>
+    <div class="pi-nav">
+      <ul>
+        <li ng-repeat="cat in $root.categories"><a ui-sref="article-list({categoryId: cat.id, name: null})" ng-bind="cat.displayName"></a></li>
+      </ul>
     </div>
-  </div>
-
+  </div>  
   <div class="wrapper">
     <ui-view class="content"></ui-view>
     <div class="sidebar-right">
       <div data-google-ad-sense></div>
       <div codigo-sidebar></div>
     </div>
-
   </div>
   <script type="text/ng-template" id="html/pi/comment-window.html">
       <h3><span ng-bind="comments.length"></span> Comentários</h3>
