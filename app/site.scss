@@ -16,6 +16,7 @@ $susy: (
 @import "sass/ng-tags-bootstrap";
 @import "prism";
 @import "core/comment";
+@import "card";
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
@@ -140,9 +141,14 @@ button, input[type="button"] {
   margin-right: auto;
   padding-top: $pi-nav-height + 5px;
 }
+
+.masonry-brick {
+  float: left;
+}
 .masonry-brick__wrapper  > .masonry-brick {
   width: 100%;
 }
+
 @include breakpoint($breakpoint-medium) {
   .masonry-brick__wrapper  > .masonry-brick {
     width: 50%;
@@ -158,8 +164,9 @@ button, input[type="button"] {
 }
 @include breakpoint($breakpoint-site) {
   .masonry-brick__wrapper  > .masonry-brick {
-    width: 25%;
+    width: 33%;
   }
+
 
   .sidebar-right {
     @include span(2 of 10 last);
@@ -184,6 +191,7 @@ button, input[type="button"] {
   
   > .pi-card {
     width: 100%;
+    padding: 0px;
   }
 }
 
