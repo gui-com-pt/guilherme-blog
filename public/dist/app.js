@@ -72,8 +72,9 @@ var boot = function(){
         facebookMetaServiceProvider.setSiteName('Codigo');
         facebookMetaServiceProvider.setType('article');
         facebookMetaServiceProvider.setLocale('en_US');
+        $urlRouterProvider.otherwise('/');
         $locationProvider.hashPrefix('!');
-        //$locationProvider.html5Mode(true);
+        $locationProvider.html5Mode(true);
 
         if(_.isString(getCookie('Authorization'))){
           var c = getCookie('Authorization');
@@ -162,7 +163,7 @@ var boot = function(){
                 controllerAs: 'ctrl'
               })
               .state('cv', {
-                url: '/curriculum-viate',
+                url: '/curriculum-vitae',
                 templateUrl: 'core/cv.tpl.html'
               })
               .state('login', {
