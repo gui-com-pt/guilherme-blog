@@ -247,15 +247,10 @@ var boot = function(){
           $rootScope.search = function(value) {
             $state.go('article-list', {name: value, categoryId: null});
           }
-          var categories;
-
-          categorySvc.find()
-            .then(function(res){
-              categories = res.data.categories;
-            });
-          $rootScope.categories = function() {
-            return categories;
-          }
+          categorySvc.find({take: 100})
+        .then(function(res){
+          $rootScope.categories = res.data.categories;
+        });
     }])
     .directive('googleAdSense', function () {
         return {
