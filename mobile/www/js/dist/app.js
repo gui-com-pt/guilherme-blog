@@ -233,23 +233,20 @@ var boot = function(){
 
       }])
     .run(['$rootScope', 'pi.core.article.articleCategorySvc', '$state', 'codigoModel', '$window', '$location',
-          function($rootScope, categorySvc, $state, codigoModel, $window, $location){
-            $rootScope.$location = $location;
+      function($rootScope, categorySvc, $state, codigoModel, $window, $location){
+        $rootScope.$location = $location;
 
-            $rootScope.isAuthenticated = codigoModel.isAuthenticated;
-            $rootScope.codigoModel = codigoModel;
+        $rootScope.isAuthenticated = codigoModel.isAuthenticated;
+        $rootScope.codigoModel = codigoModel;
+       
+        $rootScope.search = function(value) {
+          $state.go('article-list', {name: value, categoryId: null});
+        }
 
-
-             
-            });
-
-          $rootScope.search = function(value) {
-            $state.go('article-list', {name: value, categoryId: null});
-          }
-          categorySvc.find({take: 100})
-        .then(function(res){
-          $rootScope.categories = res.data.categories;
-        });
+        categorySvc.find({take: 100})
+          .then(function(res){
+            $rootScope.categories = res.data.categories;
+          });
     }]);
 })();
 
