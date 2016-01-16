@@ -34018,6 +34018,7 @@ tagsInput.run(["$templateCache", function($templateCache) {
               delete($window[key]);
             }
           );
+        }); 
       }])
       .provider('googleAdsenseConfig', function(){
         var configs = {
