@@ -24,7 +24,7 @@ var paths = {
         './bower_components/angular-datepicker/dist/index.js ',
         './bower_components/restangular/dist/restangular.js',
         './bower_components/moment/moment.js',
-        './bower_components/moment/locale/pt.js',
+        './bower_components/moment/locale/en.js',
         './bower_components/angular-masonry/angular-masonry.js',
         './bower_components/pi-class-hover/dist/pi-class-hover.js',
         './bower_components/moment-timezone/moment-timezone.js',
