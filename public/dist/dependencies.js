@@ -34011,6 +34011,14 @@ tagsInput.run(["$templateCache", function($templateCache) {
 
 	angular
       .module('pi.googleAdsense')
+      .run(['$rootScope', '$window', function($rootScope, $window) {
+        $rootScope.$on('$locationChangeStart', function () {
+          Object.keys($window).filter(function(k) { return k.indexOf('google') >= 0 }).forEach(
+            function(key) {
+              delete($window[key]);
+            }
+          );
+      }])
       .provider('googleAdsenseConfig', function(){
         var configs = {
           'format': 'auto'
