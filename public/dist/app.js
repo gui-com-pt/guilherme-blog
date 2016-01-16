@@ -240,12 +240,7 @@ var boot = function(){
             $rootScope.codigoModel = codigoModel;
 
 
-             $rootScope.$on('$locationChangeStart', function () {
-              Object.keys($window).filter(function(k) { return k.indexOf('google') >= 0 }).forEach(
-                function(key) {
-                  delete($window[key]);
-                }
-              );
+             
             });
 
           $rootScope.search = function(value) {
