@@ -56,13 +56,17 @@ var boot = function(){
 
   angular
     .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
+      'pi.googleAdsense',
       'ui.router', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
       'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
 
   angular
     .module('codigo')
-      .config(['facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', function(facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider){
+      .config(['facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
         
+        googleAdsenseConfigProvider.setClient('ca-pub-1750926490246398');  
+        googleAdsenseConfigProvider.setSlot('5417208575');
+      
         $urlRouterProvider.otherwise('/');
         
         piHttpProvider.setBaseUrl('https://guilherme.ovh/api');
@@ -251,15 +255,5 @@ var boot = function(){
         .then(function(res){
           $rootScope.categories = res.data.categories;
         });
-    }])
-    .directive('googleAdSense', function () {
-        return {
-            restrict: 'A',
-            replace: true,       
-            template: '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-1750926490246398" data-ad-slot="5417208575" data-ad-format="auto"></ins>',
-            controller: function () {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            }
-        };
-    });
+    }]);
 })();
