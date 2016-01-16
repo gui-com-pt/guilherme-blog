@@ -249,6 +249,7 @@ var boot = function(){
               delete($window[key]);
             }
           );
+        });
 
         categorySvc.find({take: 100})
           .then(function(res){
