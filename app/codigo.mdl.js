@@ -243,6 +243,13 @@ var boot = function(){
           $state.go('article-list', {name: value, categoryId: null});
         }
 
+        $rootScope.$on('$locationChangeStart', function () {
+          Object.keys($window).filter(function(k) { return k.indexOf('google') >= 0 }).forEach(
+            function(key) {
+              delete($window[key]);
+            }
+          );
+
         categorySvc.find({take: 100})
           .then(function(res){
             $rootScope.categories = res.data.categories;
