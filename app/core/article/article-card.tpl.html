@@ -1,5 +1,5 @@
 <div class="pi-card" pi-class-hover="pi-card--hover">
-    <span class="pi-card__date" am-time-ago="article.datePublished | amFromUnix"></span> <span class="pi-card__tag" ng-repeat="keyword in article.keywords" ng-bind="keyword"></span>
+    <span class="pi-card__date" am-time-ago="article.datePublished"></span> <span class="pi-card__tag" ng-repeat="keyword in article.keywords" ng-bind="keyword"></span>
     <div class="pi-card__thumb">
         <a ng-style="{'background-image': 'url({{article.image}})'}" class="pi-card__thumb-anchor" ui-sref="article-view({name: article.name, id: article.id})"></a>
         <div class="pi-card__content">

@@ -4,6 +4,10 @@
           if(_.isUndefined(scope.showSocial)) {
             showSocial = true;
           }
+
+          if(_.isNumber(scope.article.datePublished)) {
+            scope.article.datePublished = new Date(scope.article.datePublished * 1000);
+          }
         }
         return {
           scope: {
