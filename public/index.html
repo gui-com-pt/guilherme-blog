@@ -70,7 +70,7 @@
         <li ng-repeat="cat in $root.categories"><a ui-sref="article-list({categoryId: cat.id, name: null})" ng-bind="cat.displayName"></a></li>
       </ul>
     </div>
-  </div>  
+  </div>
   <div class="wrapper">
     <ui-view class="content"></ui-view>
     <div class="sidebar-right">
@@ -167,6 +167,17 @@
               A enviar... <!--{{ctrl.uploadProgress}} %-->
           </div>
       </div>
+</script>
+<script type="text/ng-template" id="template/modal/window.html">
+<div tabindex="-1" role="dialog" class="modal fade" ng-class="{in: animate}" ng-style="{'z-index': 1050 + index*10, display: 'block'}" ng-click="close($event)">
+    <div class="modal-dialog" ng-class="{'modal-sm': size == 'sm', 'modal-lg': size == 'lg'}"><div class="modal-content" modal-transclude></div></div>
+</div>
+</script>
+<script type="text/ng-template" id="template/modal/backdrop.html">
+<div class="modal-backdrop fade {{ backdropClass }}"
+     ng-class="{in: animate}"
+     ng-style="{'z-index': 1040 + (index && 1 || 0) + index*10}"
+></div>
 </script>
   <!--<div class="card-set__wrapper">
     <div class="card-set" pi-class-hover="card-set--hover">

@@ -56,19 +56,19 @@ var boot = function(){
 
   angular
     .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
-      'pi.googleAdsense',
-      'ui.router', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
+    'pi.googleAdsense', 'ngImgCrop',
+      'ui.router', 'ui.bootstrap.modal', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
       'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
 
   angular
     .module('codigo')
       .config(['facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
-        
-        googleAdsenseConfigProvider.setClient('ca-pub-1750926490246398');  
+
+        googleAdsenseConfigProvider.setClient('ca-pub-1750926490246398');
         googleAdsenseConfigProvider.setSlot('5417208575');
-      
+
         $urlRouterProvider.otherwise('/');
-        
+
         piHttpProvider.setBaseUrl('https://guilherme.ovh/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
@@ -86,7 +86,7 @@ var boot = function(){
             $httpProvider.defaults.headers.common["WWW-Authenticate"] = 'Basic ' + c;
           }
         }
-        
+
         tagsInputConfigProvider
           .setDefaults('tagsInput', {
             placeholder: 'Nova Tag',
@@ -238,7 +238,7 @@ var boot = function(){
 
         $rootScope.isAuthenticated = codigoModel.isAuthenticated;
         $rootScope.codigoModel = codigoModel;
-       
+
         $rootScope.search = function(value) {
           $state.go('article-list', {name: value, categoryId: null});
         }

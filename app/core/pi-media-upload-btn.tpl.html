@@ -1,0 +1,7 @@
+<div class="upload-thumbnail__btn" ngf-select ngf-change="upload($files)">
+    <div>Upload Foto</div>
+    <img ng-src="{{thumbnailSrc}}">
+    <div ng-show="uploadProgress > 0 && uploadProgress < 100">
+        A enviar... <!--{{ctrl.uploadProgress}} %-->
+    </div>
+</div>

@@ -19,14 +19,13 @@ $susy: (
 @import "prism";
 @import "core/comment";
 @import "card";
+@import "sass/ng-img-crop";
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
 }
 
-body {
-  background-color: $pi-nav-bg;
-}
+
 /*
  * copy to PI - temporary
  */
@@ -46,50 +45,8 @@ body {
   margin-top: 42px;
 }
 
-.pi-nav__sub {
-  background-color: lighten($pi-nav-bg, 10%);
-  font-size: 0.75em;
-}
-
-.pi-nav__sub  > .pi-nav {
-  padding: 4px 0px;
-  min-height: auto;
-  font-weight: normal;
-}
-.pi-card__tumb {
-    /*max-width: 570px;*/
-    min-height: 40px;
-    min-width: 120px;
-  }
-
-.pi-card__social-list {
-  text-align: center;
-
-  > li, > .pi-card__list-item {
-    text-align:center;
-    white-space:nowrap;
-    display: inline;
-    text-align: center;
-    font-size: 2em;
-  }
-}
-
-.pi-card__thumb-anchor {
-  background-repeat: none;
-  background-size: 100% auto;
-  width: 100%;
-  min-height: 100px;
-}
 
 
-.pi-card__content > p {
-  max-height: $font-size-small * 4;
-  line-height: $font-size-small;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  word-wrap: break-word;
-  overflow: hidden;
-}
 .ui-select-choices-content {
   background-color: #fff;
 }
@@ -136,7 +93,12 @@ button, input[type="button"] {
 
 @include breakpoint($breakpoint-medium) {
   .masonry-brick__wrapper  > .masonry-brick {
-    width: 50%;
+    width: 49.5%;
+    margin-right: 0.5%;
+
+    &:nth-child(3n) {
+      margin-right: 0;
+    }
   }
 
   .sidebar-right {
@@ -178,7 +140,7 @@ button, input[type="button"] {
 .sidebar-right {
   border-left: solid 1px #ccc;
   padding-left: 10px;
-  
+
   > .pi-card {
     width: 100%;
     padding: 0px;

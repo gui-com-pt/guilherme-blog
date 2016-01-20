@@ -1,0 +1,12 @@
+<div pi-media-upload>
+  <div ng-show="mediaSelected != true">
+    <h4>Enviar Imagem</h4>
+    <div class="upload-thumbnail" pi-media-upload-btn ng-model="image">34</div>
+  </div>
+  <div ng-show="mediaSelected">
+    <h4>Recorta a Imagem</h4>
+    <img-crop image="mediaUri" result-image="mediaCropped"></img-crop>
+    <h4>Imagem Final</h4>
+    <img ng-src="{{myCroppedImage}}" />
+  </div>
+</div>
