@@ -59,6 +59,18 @@ button, input[type="button"] {
   @include button-primary();
 }
 
+.view-1 {
+  @include clearfix();
+}
+
+.view-1__side {
+  @include span(1 of 6);
+}
+
+.view-1__content {
+  @include span(5 of 6 last);
+}
+
 .comment-none {
   margin-top: 3em;
   margin-left: auto;

@@ -1,12 +1,39 @@
-<div pi-media-upload>
-  <div ng-show="mediaSelected != true">
-    <h4>Enviar Imagem</h4>
-    <div class="upload-thumbnail" pi-media-upload-btn ng-model="image">34</div>
+<div class="modal-header">
+  <h3 class="modal-title">I'm a modal!</h3>
+</div>
+<div class="modal-body">
+  <div pi-media-upload pi-media-finish="finish()" class="pi-media-upload">
+    <button ng-click="viewHome()">Home</button>
+    <button ng-click="viewList()">Galeria</button>
+    <div ng-show="view == 'home'">
+      <h4>Escolher Imagem</h4>
+      <form class="pi-form">
+        <div class="pi-form__group">
+          Envie uma imagem <input type="file" id="mediaUploadBtn" />
+        </div>
+      </form>
+    </div>
+    <div ng-show="view == 'list'">
+      <div class="list-media">
+        <div class="list-media__item" ng-repeat="media in files">
+          <img ng-src="file.uri" />
+          <button ng-click="cropFile(media.uri)">Escolher</button>
+        </div>
+      </div>
+    </div>
+    <div ng-show="view == 'crop'">
+      <div class="pi-media-upload__crop">
+        <h4>Tratar Imagem</h4>
+        <img-crop image="mediaUri" result-image="mediaCropped" area-type="rectangle" aspect-ratio="1.7"></img-crop>
+      </div>
+      <div class="pi-media-upload__preview">
+        <h4>Imagem Final</h4>
+        <button ng-click="uploadCropped()">Finalizar</button>
+        <div><img ng-src="{{mediaCropped}}" /></div>
+      </div>
+    </div>
   </div>
-  <div ng-show="mediaSelected">
-    <h4>Recorta a Imagem</h4>
-    <img-crop image="mediaUri" result-image="mediaCropped"></img-crop>
-    <h4>Imagem Final</h4>
-    <img ng-src="{{myCroppedImage}}" />
-  </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
 </div>

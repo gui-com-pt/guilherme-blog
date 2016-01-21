@@ -45,7 +45,7 @@ var paths = {
         './bower_components/ng-tags-input/ng-tags-input.js',
         './bower_components/angular-socialshare/dist/angular-socialshare.min.js',
         './bower_components/pi-google-adsense/dist/pi-google-adsense.js',
-        './bower_components/ng-img-crop/compile/unminified/ng-img-crop.js'
+        './bower_components/ng-img-crop-full-extended/compile/unminified/ng-img-crop.js'
     ],
     appModules: [
         './app/module.js',

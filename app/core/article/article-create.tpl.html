@@ -1,8 +1,9 @@
-<div class="sportsnews-create__wrapper">
-    <div class="sportsnews-create__side">
-        <div class="upload-thumbnail" pi-media-upload-trigger ng-model="ctrl.model.image">Open now</div>
+<div class="view-1">
+    <div class="view-1__side">
+        <button pi-media-upload-trigger ng-model="ctrl.model.image">Choose Image</button>
+        <img ng-show="ctrl.model.image != ''" ng-src="{{ctrl.model.image}}" />
     </div>
-    <div class="sportsnews-create__content">
+    <div class="view-1__content">
         <div class="pi-form__wrapper">
             <form class="fit-form" name="createForm">
                 <div class="pi-form__group">
