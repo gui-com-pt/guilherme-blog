@@ -23,7 +23,8 @@ function getCookie(cname) {
         d = new Date(d.getTime() + 1000 * expires_seconds);
         document.cookie = variable + '=' + value + '; expires=' + d.toGMTString() + ';';
     }
-var boot = function(){
+    
+    var boot = function(){
          var initInjector = angular.injector(['ng']);
           var $http = initInjector.get('$http');
           var _response;
@@ -56,7 +57,7 @@ var boot = function(){
 
   angular
     .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
-  'pi.core.file','pi.googleAdsense', 'ngImgCrop',
+  'pi.core.file','pi.googleAdsense', 'ngImgCrop', 'pi.common',
       'ui.router', 'ui.bootstrap.modal', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
       'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
 
@@ -98,7 +99,6 @@ var boot = function(){
             loadOnDownArrow: true,
             loadOnEmpty: true
           });
-
 
           uiSelectConfig.theme = 'selectize';
           $provide.decorator('taOptions', ['taRegisterTool', '$delegate', function(taRegisterTool, taOptions){
@@ -225,7 +225,7 @@ var boot = function(){
                   controllerAs: 'ctrl'
               })
               .state('article-view', {
-                  url: '/artigo/:id',
+                  url: '/blog/:categories/:name--:id',
                   templateUrl: 'core/article/article-view.tpl.html',
                   controller: 'codigo.core.article.articleViewCtrl',
                   controllerAs: 'ctrl'
@@ -257,3 +257,53 @@ var boot = function(){
           });
     }]);
 })();
+
+
+function baseListCtrl($scope, $stateParams) {
+  var self = this;
+
+  this.perPage = 12;
+  this.results = [];
+
+  this.queryModel = {
+      busy: false
+  };
+
+  function getModelFromStateParams(names, model){
+
+      angular.forEach(names, function(value){
+          if(!_.isUndefined($stateParams[value])) {
+              model[value] = $stateParams[value];
+          }
+      });
+
+      return model;
+  }
+
+  this.getQueryModel = function(stateKeys){
+      var model = {skip: this.results.length, take: this.perPage};
+      getModelFromStateParams(stateKeys, model);
+      return model;
+  }
+
+  this.query = function() {
+      if(this.queryModel.busy) return;
+      this.queryModel.busy = true;
+      this.getData()
+        .then(function(results){
+          if(!_.isArray(results) || results.length < 1) return;
+
+          angular.forEach(results, function(item){
+              self.results.push(item);
+          });
+
+          self.queryModel.busy = false;
+      }, function(){
+          self.queryModel.busy = false;
+      });
+  };
+
+  $scope.$on('$destroy', function(){
+      self.results = undefined;
+  });
+}

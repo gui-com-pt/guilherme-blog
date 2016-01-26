@@ -14,11 +14,16 @@
       </form>
     </div>
     <div ng-show="view == 'list'">
-      <div class="list-media">
-        <div class="list-media__item" ng-repeat="media in files">
+      <div class="masonry-brick__wrapper" masonry infinite-scroll="query()" infinite-scroll-disabled="queryModel.busy" infinite-scroll-immediate-check="true">
+        <div class="ng-cloak" ng-show="ctrl.results.length === 0">No results to display.</div>
+        <div class="masonry-brick" ng-repeat="media in files">
+          <h4 ng-bind="file.name"></h4>
           <img ng-src="file.uri" />
           <button ng-click="cropFile(media.uri)">Escolher</button>
         </div>
+      </div>
+      <div ng-show="queryModel.error">
+        An error ocurred loading more files. <button ng-click="query()" type="button">Try again</button>
       </div>
     </div>
     <div ng-show="view == 'crop'">

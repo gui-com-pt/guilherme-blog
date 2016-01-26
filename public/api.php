@@ -282,6 +282,8 @@ class DemoHost extends AppHost {
 
     $db = $container->get('OdmConfiguration');
     $db->setDefaultDb('guilherme-blog');
+    $db->setHostname('ds1.codigo.ovh');
+    $db->setPort(8032);
   }
 }
 

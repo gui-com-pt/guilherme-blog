@@ -15,6 +15,7 @@ var paths = {
         './bower_components/angular-bind-html-compile/angular-bind-html-compile.js',
         './bower_components/underscore/underscore.js',
         './bower_components/pi-class-hover/dist/pi-class-hover.js',
+        './bower_components/pi-common-angular/dist/pi-common-angular.js',
         './bower_components/ngInfiniteScroll/build/ng-infinite-scroll.js',
         './bower_components/angular-facebook/lib/angular-facebook.js',
         './bower_components/ui-bootstrap/src/transition/transition.js',

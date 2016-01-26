@@ -1,56 +1,20 @@
 (function(){
-    var SportsNewsListCtrl = function(articleSvc, $scope, $stateParams){
-        var self = this;
 
-        this.news = [];
+  angular
+      .module('codigo')
+      .controller('codigo.core.article.articleListCtrl', ['pi.core.article.articleSvc', '$scope', '$stateParams',
+      function(articleSvc, $scope, $stateParams){
+          baseListCtrl.call(this, $scope, $stateParams);
+          var self = this;
 
-        this.queryModel = {
-            busy: false
-        };
-
-        $scope.$on('$destroy', function(){
-            self.news = undefined;
-        });
-
-        var getModelFromStateParams = function(names, model){
-
-            angular.forEach(names, function(value){
-                if(!_.isUndefined($stateParams[value])) {
-                    model[value] = $stateParams[value];
-                }
-            });
-
-            return model;
-        }
-
-        var getQueryModel = function(){
-            var model = {skip: self.news.length, take: 12};
-            getModelFromStateParams(['name', 'categoryId'], model);
-            return model;
-        }
-
-        this.query = function() {
-            if(self.queryModel.busy) return;
-
-            self.queryModel.busy = true;
-            articleSvc.find(getQueryModel()).then(function(r){
-                if(!_.isArray(r.data.articles) || r.data.articles.length < 1) return;
-
-                angular.forEach(r.data.articles, function(event){
-                    self.news.push(event);
-                });
-
-                self.queryModel.busy = false;
+          this.getData = function() {
+            return articleSvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
+                //self.queryModel.busy = false;
+                return r.data.articles || r.data;
             }, function(){
-                self.queryModel.busy = false;
+                //self.queryModel.busy = false;
             });
-        };
+          }
 
-    };
-
-    SportsNewsListCtrl.$inject = ['pi.core.article.articleSvc', '$scope', '$stateParams'];
-
-    angular
-        .module('codigo')
-        .controller('codigo.core.article.articleListCtrl', SportsNewsListCtrl);
+      }]);
 })();

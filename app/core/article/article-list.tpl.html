@@ -1,22 +1,25 @@
-<div class="home-intro">
-	<h2 class="home-intro__head">Want to hire me? I'm willing to realocate</h2>
-	<p>Hi, my name is Guilherme and i've 24 years old. I've been working for programming companies for almost 5 years and started with TCL with 13/14. I didn't ended up my education because i started working for a company at 18 developing custom PHP applications, then going to C# consultant companies.</p>
-	<p>I'm currently looking for a new home to <u>work for</u>.</p>
-	<ul>
-		<li><b>Programming Languages:</b> C#, PHP and Python. Also minor knowledge of TCL, C++ and Ruby</li>
-		<li><b>Frameworks:</b> ServiceStack, .NET Web API, PHP Frameworks (Laravel, Slim, etc)</li>
-		<li><b>Clientside:</b> LESS and SASS. Convert PSD templates to HTML W3C validated </li>
-		<li><b>Clientside Frameworks:</b> AngularJS 1.X and 2, Backbone, ExtJS</li>
-		<li><b>SysAdmin:</b> I manage a few servers for diferent porpuses as Email Hosting, P2P networks, Web Hosting, VOIP, Video Streaming, Gaming Servers, IRC based services, servers monitoring technologies like Icinga. </li>
-	</ul>
-	<p>I'm a Linux guy (Gentoo and Debian), i dont use a mobile phone and my code style is improving each day. I code with TDD, implement the (most) appropriate design patterns. Both in C# and PHP i've worked with several frameworks like ServiceStack, CodeIgniter, Laravel, Slim, etc to provide REST APIs as well SOAP.<br>
-	I love <b>Service Oriented Architecture</b>. For the projects i've worked on, micro services are usually a great way to go and organize large applications.</p>
-	<p>Read more: <a ui-sref="client-side">Client Side</a>, <a ui-sref="php">PHP/HHVM</a>, <a ui-sref="csharp">C#</a> and <a ui-sref="sysadmin">SysAdmin</a>.<br>I'm also writting an PHP/Hacklang Framework - <a href="https://github.com/guilhermegeek/pi-framework/tree/dev">Pi Services</a>.</p>
-	<p><a href="mailto:email@guilhermecardoso.pt">email@guilhermecardoso.pt</a> | <a href="http://stackoverflow.com/users/365383/guilherme-cardoso">Stackoverflow</a> | <a href="https://github.com/guilhermegeek/">Github</a></p>
+<div class="home-intro" ng-init="show=true">
+	<div ng-show="show">
+		<h2 class="home-intro__head">Want to hire me? I'm willing to realocate <a alt="Fechar" class="head__close-icon" ng-click="show=false"><i class="icon ion-close-round"></i></a></h2>
+		<p>Hi, my name is Guilherme and i've 24 years old. I've been working for programming companies for almost 5 years and started with TCL with 13/14. I didn't ended up my education because i started working for a company at 18 developing custom PHP applications, then going to C# consultant companies.</p>
+		<p>I'm currently looking for a new home to <u>work for</u>.</p>
+		<ul>
+			<li><b>Programming Languages:</b> C#, PHP and Python. Also minor knowledge of TCL, C++ and Ruby</li>
+			<li><b>Frameworks:</b> ServiceStack, .NET Web API, PHP Frameworks (Laravel, Slim, etc)</li>
+			<li><b>Clientside:</b> LESS and SASS. Convert PSD templates to HTML W3C validated </li>
+			<li><b>Clientside Frameworks:</b> AngularJS 1.X and 2, Backbone, ExtJS</li>
+			<li><b>SysAdmin:</b> I manage a few servers for diferent porpuses as Email Hosting, P2P networks, Web Hosting, VOIP, Video Streaming, Gaming Servers, IRC based services, servers monitoring technologies like Icinga. </li>
+		</ul>
+		<p>I'm a Linux guy (Gentoo and Debian), i dont use a mobile phone and my code style is improving each day. I code with TDD, implement the (most) appropriate design patterns. Both in C# and PHP i've worked with several frameworks like ServiceStack, CodeIgniter, Laravel, Slim, etc to provide REST APIs as well SOAP.<br>
+		I love <b>Service Oriented Architecture</b>. For the projects i've worked on, micro services are usually a great way to go and organize large applications.</p>
+		<p>Read more: <a ui-sref="client-side">Client Side</a>, <a ui-sref="php">PHP/HHVM</a>, <a ui-sref="csharp">C#</a> and <a ui-sref="sysadmin">SysAdmin</a>.<br>I'm also writting an PHP/Hacklang Framework - <a href="https://github.com/guilhermegeek/pi-framework/tree/dev">Pi Services</a>.</p>
+		<p><a href="mailto:email@guilhermecardoso.pt">email@guilhermecardoso.pt</a> | <a href="http://stackoverflow.com/users/365383/guilherme-cardoso">Stackoverflow</a> | <a href="https://github.com/guilhermegeek/">Github</a></p>
+	</div>
+	<div ng-show="!show"><a ng-click="show=true">Want to hire me?</a></div>
 </div>
 <div masonry infinite-scroll="ctrl.query()" infinite-scroll-disabled="ctrl.queryModel.busy" infinite-scroll-immediate-check="true" class="masonry-brick__wrapper">
-	<div class="ng-cloak" ng-show="ctrl.news.length === 0">No results to display.</div>
-  	<div class="masonry-brick" ng-repeat="news in ctrl.news">
-    	<div codigo-article-card show-social="true" article="news"></div>
-  	</div>
+	<div class="ng-cloak" ng-show="ctrl.results.length === 0">No results to display.</div>
+	<div class="masonry-brick" ng-repeat="news in ctrl.results">
+  	<div codigo-article-card show-social="true" article="news"></div>
+	</div>
 </div>

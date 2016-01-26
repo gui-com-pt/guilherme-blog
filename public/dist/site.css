@@ -5617,3 +5617,8 @@ button, input[type="button"] {
 ul {
   list-style: none;
   margin-bottom: 20px; }
+
+.head__close-icon {
+  float: right;
+  display: block;
+  cursor: pointer; }

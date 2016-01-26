@@ -23,7 +23,8 @@ function getCookie(cname) {
         d = new Date(d.getTime() + 1000 * expires_seconds);
         document.cookie = variable + '=' + value + '; expires=' + d.toGMTString() + ';';
     }
-var boot = function(){
+    
+    var boot = function(){
          var initInjector = angular.injector(['ng']);
           var $http = initInjector.get('$http');
           var _response;
@@ -56,7 +57,7 @@ var boot = function(){
 
   angular
     .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
-  'pi.core.file','pi.googleAdsense', 'ngImgCrop',
+  'pi.core.file','pi.googleAdsense', 'ngImgCrop', 'pi.common',
       'ui.router', 'ui.bootstrap.modal', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
       'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
 
@@ -98,7 +99,6 @@ var boot = function(){
             loadOnDownArrow: true,
             loadOnEmpty: true
           });
-
 
           uiSelectConfig.theme = 'selectize';
           $provide.decorator('taOptions', ['taRegisterTool', '$delegate', function(taRegisterTool, taOptions){
@@ -225,7 +225,7 @@ var boot = function(){
                   controllerAs: 'ctrl'
               })
               .state('article-view', {
-                  url: '/artigo/:id',
+                  url: '/blog/:categories/:name--:id',
                   templateUrl: 'core/article/article-view.tpl.html',
                   controller: 'codigo.core.article.articleViewCtrl',
                   controllerAs: 'ctrl'
@@ -257,6 +257,56 @@ var boot = function(){
           });
     }]);
 })();
+
+
+function baseListCtrl($scope, $stateParams) {
+  var self = this;
+
+  this.perPage = 12;
+  this.results = [];
+
+  this.queryModel = {
+      busy: false
+  };
+
+  function getModelFromStateParams(names, model){
+
+      angular.forEach(names, function(value){
+          if(!_.isUndefined($stateParams[value])) {
+              model[value] = $stateParams[value];
+          }
+      });
+
+      return model;
+  }
+
+  this.getQueryModel = function(stateKeys){
+      var model = {skip: this.results.length, take: this.perPage};
+      getModelFromStateParams(stateKeys, model);
+      return model;
+  }
+
+  this.query = function() {
+      if(this.queryModel.busy) return;
+      this.queryModel.busy = true;
+      this.getData()
+        .then(function(results){
+          if(!_.isArray(results) || results.length < 1) return;
+
+          angular.forEach(results, function(item){
+              self.results.push(item);
+          });
+
+          self.queryModel.busy = false;
+      }, function(){
+          self.queryModel.busy = false;
+      });
+  };
+
+  $scope.$on('$destroy', function(){
+      self.results = undefined;
+  });
+}
 
 (function(){
   angular
@@ -500,14 +550,19 @@ var boot = function(){
           }
           return this;
         }])
-        .controller('uploadImgCropCtrl', ['$rootScope', '$scope', '$modalInstance', 'modalObj', '$sce', 'Upload', 'piHttp', '$timeout', 'pi.core.file.fileSvc',
-          function($rootScope, $scope, $modalInstance, modalObj, $sce, Upload, piHttp, $timeout, fileSvc) {
+        .controller('uploadImgCropCtrl', ['$rootScope', '$scope', '$modalInstance', 'modalObj', '$sce', 'Upload', 'piHttp', '$timeout', 'pi.core.file.fileSvc', 'fileUtils', '$q',
+          function($rootScope, $scope, $modalInstance, modalObj, $sce, Upload, piHttp, $timeout, fileSvc, fileUtils, $q) {
 
             $scope.mediaSelected = false;
+            $scope.queryTake = 24;
             $scope.mediaUri = '';
             $scope.mediaCropped = '';
             $scope.view = 'home';
             $scope.files = [];
+            $scope.queryModel = {
+              busy: false,
+              error: false
+            };
 
             var handleFileSelect=function(evt) {
               var file=evt.currentTarget.files[0];
@@ -527,12 +582,28 @@ var boot = function(){
               $modalInstance.dismiss();
             }
 
-            $scope.viewList = function() {
-              fileSvc.find()
+            $scope.query = function() {
+              var defer = $q.defer();
+              $scope.queryModel.busy = true;
+              fileSvc.find({skip: $scope.files.length, take: $scope.queryTake})
                 .then(function(res) {
+                  $scope.queryModel.busy = false;
+                  defer.resolve(res.data.files);
                   angular.forEach(res.data.files, function(file) {
                     $scope.files.push(file);
                   });
+                  $scope.queryModel.error = false;
+                  defer.resolve(res);
+                }, function(res) {
+                  $scope.queryModel.busy = true;
+                  $scope.queryModel.error = true;
+                });
+
+              return defer.promise;
+            }
+            $scope.viewList = function() {
+              $scope.query()
+                .then(function() {
                   $scope.view = 'list';
                 });
             }
@@ -546,18 +617,9 @@ var boot = function(){
               $scope.view = 'crop';
             }
 
-            function dataURLtoBlob(dataurl) {
-              var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-                  bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-              while(n--){
-                  u8arr[n] = bstr.charCodeAt(n);
-              }
-              return new Blob([u8arr], {type:mime});
-            }
-
             $scope.uploadCropped = function() {
               var url = piHttp.getBaseUrl() + '/filesystem',
-                  fileType = $scope.mediaUri.substring($scope.mediaUri.lastIndexOf(":")+1,$scope.mediaUri.lastIndexOf(";")),
+                  fileType = fileUtils.typeFromBlog($scope.mediaUri),
                   extension = '';
 
               switch(fileType) {
@@ -572,7 +634,7 @@ var boot = function(){
                   break;
               }
 
-              var blob = dataURLtoBlob($scope.mediaCropped),
+              var blob = fileUtils.dataURLtoBlob($scope.mediaCropped),
                   file = new File([blob], "uploaded" + extension, {
                     lastModified: new Date(0),
                     type: fileType
@@ -711,60 +773,24 @@ var boot = function(){
         .controller('codigo.core.article.articleCreateCtrl', SportsNewsCreateCtrl);
 })();
 (function(){
-    var SportsNewsListCtrl = function(articleSvc, $scope, $stateParams){
-        var self = this;
 
-        this.news = [];
+  angular
+      .module('codigo')
+      .controller('codigo.core.article.articleListCtrl', ['pi.core.article.articleSvc', '$scope', '$stateParams',
+      function(articleSvc, $scope, $stateParams){
+          baseListCtrl.call(this, $scope, $stateParams);
+          var self = this;
 
-        this.queryModel = {
-            busy: false
-        };
-
-        $scope.$on('$destroy', function(){
-            self.news = undefined;
-        });
-
-        var getModelFromStateParams = function(names, model){
-
-            angular.forEach(names, function(value){
-                if(!_.isUndefined($stateParams[value])) {
-                    model[value] = $stateParams[value];
-                }
-            });
-
-            return model;
-        }
-
-        var getQueryModel = function(){
-            var model = {skip: self.news.length, take: 12};
-            getModelFromStateParams(['name', 'categoryId'], model);
-            return model;
-        }
-
-        this.query = function() {
-            if(self.queryModel.busy) return;
-
-            self.queryModel.busy = true;
-            articleSvc.find(getQueryModel()).then(function(r){
-                if(!_.isArray(r.data.articles) || r.data.articles.length < 1) return;
-
-                angular.forEach(r.data.articles, function(event){
-                    self.news.push(event);
-                });
-
-                self.queryModel.busy = false;
+          this.getData = function() {
+            return articleSvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
+                //self.queryModel.busy = false;
+                return r.data.articles || r.data;
             }, function(){
-                self.queryModel.busy = false;
+                //self.queryModel.busy = false;
             });
-        };
+          }
 
-    };
-
-    SportsNewsListCtrl.$inject = ['pi.core.article.articleSvc', '$scope', '$stateParams'];
-
-    angular
-        .module('codigo')
-        .controller('codigo.core.article.articleListCtrl', SportsNewsListCtrl);
+      }]);
 })();
 
 (function(){

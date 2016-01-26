@@ -28,14 +28,19 @@
           }
           return this;
         }])
-        .controller('uploadImgCropCtrl', ['$rootScope', '$scope', '$modalInstance', 'modalObj', '$sce', 'Upload', 'piHttp', '$timeout', 'pi.core.file.fileSvc',
-          function($rootScope, $scope, $modalInstance, modalObj, $sce, Upload, piHttp, $timeout, fileSvc) {
+        .controller('uploadImgCropCtrl', ['$rootScope', '$scope', '$modalInstance', 'modalObj', '$sce', 'Upload', 'piHttp', '$timeout', 'pi.core.file.fileSvc', 'fileUtils', '$q',
+          function($rootScope, $scope, $modalInstance, modalObj, $sce, Upload, piHttp, $timeout, fileSvc, fileUtils, $q) {
 
             $scope.mediaSelected = false;
+            $scope.queryTake = 24;
             $scope.mediaUri = '';
             $scope.mediaCropped = '';
             $scope.view = 'home';
             $scope.files = [];
+            $scope.queryModel = {
+              busy: false,
+              error: false
+            };
 
             var handleFileSelect=function(evt) {
               var file=evt.currentTarget.files[0];
@@ -55,12 +60,28 @@
               $modalInstance.dismiss();
             }
 
-            $scope.viewList = function() {
-              fileSvc.find()
+            $scope.query = function() {
+              var defer = $q.defer();
+              $scope.queryModel.busy = true;
+              fileSvc.find({skip: $scope.files.length, take: $scope.queryTake})
                 .then(function(res) {
+                  $scope.queryModel.busy = false;
+                  defer.resolve(res.data.files);
                   angular.forEach(res.data.files, function(file) {
                     $scope.files.push(file);
                   });
+                  $scope.queryModel.error = false;
+                  defer.resolve(res);
+                }, function(res) {
+                  $scope.queryModel.busy = true;
+                  $scope.queryModel.error = true;
+                });
+
+              return defer.promise;
+            }
+            $scope.viewList = function() {
+              $scope.query()
+                .then(function() {
                   $scope.view = 'list';
                 });
             }
@@ -74,18 +95,9 @@
               $scope.view = 'crop';
             }
 
-            function dataURLtoBlob(dataurl) {
-              var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-                  bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-              while(n--){
-                  u8arr[n] = bstr.charCodeAt(n);
-              }
-              return new Blob([u8arr], {type:mime});
-            }
-
             $scope.uploadCropped = function() {
               var url = piHttp.getBaseUrl() + '/filesystem',
-                  fileType = $scope.mediaUri.substring($scope.mediaUri.lastIndexOf(":")+1,$scope.mediaUri.lastIndexOf(";")),
+                  fileType = fileUtils.typeFromBlog($scope.mediaUri),
                   extension = '';
 
               switch(fileType) {
@@ -100,7 +112,7 @@
                   break;
               }
 
-              var blob = dataURLtoBlob($scope.mediaCropped),
+              var blob = fileUtils.dataURLtoBlob($scope.mediaCropped),
                   file = new File([blob], "uploaded" + extension, {
                     lastModified: new Date(0),
                     type: fileType
