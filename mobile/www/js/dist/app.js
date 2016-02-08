@@ -162,7 +162,7 @@ function getCookie(cname) {
 
         $urlRouterProvider.otherwise('/');
 
-        piHttpProvider.setBaseUrl('http://localhost/api');
+        piHttpProvider.setBaseUrl('http://viseu.ovh/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');
