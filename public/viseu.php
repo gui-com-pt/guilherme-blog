@@ -29,8 +29,8 @@ class DemoHost extends AppHost {
   	$this->config()->domain('viseu.ovh');
     $this->config()->protocol('https');
   	$conf = new FileSystemConfiguration();
-  	$conf->storeDir(__DIR__ . '/cdn/viseu');
-  	$this->config()->staticFolder(__DIR__ . '/cdn/viseu');
+  	$conf->storeDir(__DIR__ . '/cdn');
+  	$this->config()->staticFolder(__DIR__ . '/cdn');
 
   	$this->registerPlugin(new FileSystemPlugin($conf));
   	$this->registerPlugin(new PiUmlPlugin());
