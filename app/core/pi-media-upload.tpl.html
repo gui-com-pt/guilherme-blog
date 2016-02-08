@@ -18,7 +18,7 @@
         <div class="ng-cloak" ng-show="ctrl.results.length === 0">No results to display.</div>
         <div class="masonry-brick" ng-repeat="media in files">
           <h4 ng-bind="file.name"></h4>
-          <img ng-src="file.uri" />
+          <img ng-src="{{file.uri}}" />
           <button ng-click="cropFile(media.uri)">Escolher</button>
         </div>
       </div>

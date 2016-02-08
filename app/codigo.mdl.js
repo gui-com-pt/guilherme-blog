@@ -47,6 +47,97 @@ function getCookie(cname) {
         .module('templates', []);
 
     angular
+      .module('codigo.admin', ['codigo', 'ui.router', 'pi.common']);
+
+    angular
+      .module('codigo.admin.core', ['codigo', 'codigo.admin']);
+
+    angular
+      .module('codigo.admin.core')
+      .config(['$stateProvider', 
+        function($stateProvider) {
+
+          $stateProvider
+            .state('admin-article-list', {
+              url: '/admin/article-list',
+              controller: 'admin.core.article.articleListCtrl',
+              controllerAs: 'ctrl',
+              templateUrl: 'admin/core/article/article-list.tpl.html'
+            })
+            .state('admin-article-state', {
+                url: '/artigo-state/:id',
+                templateUrl: 'admin/core/article/article-state.tpl.html',
+                controller: 'admin.core.article.articleStateCtrl',
+                controllerAs: 'ctrl'
+            })
+             .state('admin-article-category-save', {
+                url: '/artigo-category-save/:id',
+                templateUrl: 'admin/core/article/article-category-save.tpl.html',
+                controller: 'admin.core.article.articleSaveCategoryCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-category', {
+                url: '/artigo-category/:id',
+                templateUrl: 'admin/core/article/article-category.tpl.html',
+                controller: 'admin.core.article.articleCategoryCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-create', {
+                url: '/artigo-novo',
+                templateUrl: 'admin/core/article/article-create.tpl.html',
+                controller: 'admin.core.article.articleCreateCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-save', {
+                url: '/article-save/:id',
+                templateUrl: 'admin/core/article/article-save.tpl.html',
+                controller: 'admin.core.article.articleSaveCtrl',
+                controllerAs: 'ctrl'
+            });
+
+        }])
+      .directive('adminAuthor', [function(){
+        return {
+          link: function(scope, elem, attrs) {
+
+          },
+          scope: {
+            'entity': '@'
+          },
+          template: '<a class="admin-author"><img class="admin-author__avatar" src="http://gravatar.com/avatar/e53ef2b311753a8e087dfa4994125022?s=512" /><span class="author__name" ng-bind="author.displayName"></span></a>'
+        }
+      }])
+      .directive('articleStateBadge', [function(){
+        return {
+          link: function(scope, elem, attrs, ngModel) {
+            scope.$watch(function() {
+              return ngModel.$modelValue;
+            }, function(newValue) {
+              if(!_.isNumber(newValue)) {
+                scope.displayText = 'N/A';
+                return;
+              }
+
+              switch(newValue)
+              {
+                case 1:
+                  scope.displayText = 'Draft';
+                  break;
+                case 2:
+                  scope.displayText = 'Published';
+                  break;
+                case 3:
+                  scope.displayText = 'Censored';
+                  break;
+              }
+            })
+          },
+          require: '^ngModel',
+          template: '<span class="badge badge-state">{{displayText}}</span>'
+        }
+      }]);
+
+    angular
         .module('codigo.core', ['codigo']);
 
     angular
@@ -56,10 +147,11 @@ function getCookie(cname) {
         .module('codigo.core.question', ['codigo.core']);
 
   angular
-    .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
+    .module('codigo', ['codigo.admin.core', 'codigo.admin', 'templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
   'pi.core.file','pi.googleAdsense', 'ngImgCrop', 'pi.common',
       'ui.router', 'ui.bootstrap.modal', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
-      'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
+      'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile',
+      'datetime']);
 
   angular
     .module('codigo')
@@ -70,7 +162,7 @@ function getCookie(cname) {
 
         $urlRouterProvider.otherwise('/');
 
-        piHttpProvider.setBaseUrl('https://guilherme.ovh/api');
+        piHttpProvider.setBaseUrl('http://localhost/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');
@@ -212,18 +304,6 @@ function getCookie(cname) {
                   controller: 'codigo.core.article.articleListCtrl',
                   controllerAs: 'ctrl'
               })
-              .state('article-create', {
-                  url: '/artigo-novo',
-                  templateUrl: 'core/article/article-create.tpl.html',
-                  controller: 'codigo.core.article.articleCreateCtrl',
-                  controllerAs: 'ctrl'
-              })
-              .state('article-save', {
-                  url: '/artigo-editar/:id',
-                  templateUrl: 'core/article/article-save.tpl.html',
-                  controller: 'codigo.core.article.articleSaveCtrl',
-                  controllerAs: 'ctrl'
-              })
               .state('article-view', {
                   url: '/blog/:categories/:name--:id',
                   templateUrl: 'core/article/article-view.tpl.html',
@@ -232,9 +312,62 @@ function getCookie(cname) {
               });
 
       }])
-    .run(['$rootScope', 'pi.core.article.articleCategorySvc', '$state', 'codigoModel', '$window', '$location',
-      function($rootScope, categorySvc, $state, codigoModel, $window, $location){
+    .run(['$rootScope', 'pi.core.app.eventCategorySvc', 'pi.core.article.articleCategorySvc', '$state', '$stateParams', 'codigoModel', '$window', '$location',
+      function($rootScope, eventCategorySvc, categorySvc, $state, $stateParams, codigoModel, $window, $location){
+
         $rootScope.$location = $location;
+        $rootScope.$state = $state;
+        $rootScope.$stateParams = $stateParams;
+        $rootScope.$on("$stateChangeSuccess",  function(event, toState, toParams, fromState, fromParams) {
+            $rootScope.previousState_name = fromState.name;
+            $rootScope.previousState_params = fromParams;
+        });
+        
+        $rootScope.goPreviousState = function(defaultState) {
+            if(_.isEmpty($rootScope.previousState_name) && _.isString(defaultState)) {
+              $state.go(defaultState);
+            } else {
+              $state.go($rootScope.previousState_name,$rootScope.previousState_params);
+            }
+        };
+
+        $rootScope.articleStates = [
+          {
+            id: 1,
+            name: 'Draft'
+          },
+          {
+            id: 2,
+            name: 'Published'
+          },
+          {
+            id: 3,
+            name: 'Censored'
+          },
+          {
+            id: 99,
+            name: 'Removed'
+          }
+        ];
+
+        $rootScope.eventStates = [
+          {
+            id: 1,
+            name: 'Draft'
+          },
+          {
+            id: 2,
+            name: 'Published'
+          },
+          {
+            id: 3,
+            name: 'Censored'
+          },
+          {
+            id: 99,
+            name: 'Removed'
+          }
+        ];
 
         $rootScope.isAuthenticated = codigoModel.isAuthenticated;
         $rootScope.codigoModel = codigoModel;
@@ -254,6 +387,12 @@ function getCookie(cname) {
         categorySvc.find({take: 100})
           .then(function(res){
             $rootScope.categories = res.data.categories;
+            $rootScope.articleCategories = res.data.categories;
+          });
+
+        eventCategorySvc.find({take: 100})
+          .then(function(res){
+            $rootScope.eventCategories = res.data.categories;
           });
     }]);
 })();
@@ -262,10 +401,10 @@ function getCookie(cname) {
 function baseListCtrl($scope, $stateParams) {
   var self = this;
 
-  this.perPage = 12;
-  this.results = [];
+  self.perPage = 12;
+  self.results = [];
 
-  this.queryModel = {
+  self.queryModel = {
       busy: false
   };
 

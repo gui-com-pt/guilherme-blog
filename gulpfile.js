@@ -46,7 +46,8 @@ var paths = {
         './bower_components/ng-tags-input/ng-tags-input.js',
         './bower_components/angular-socialshare/dist/angular-socialshare.min.js',
         './bower_components/pi-google-adsense/dist/pi-google-adsense.js',
-        './bower_components/ng-img-crop-full-extended/compile/unminified/ng-img-crop.js'
+        './bower_components/ng-img-crop-full-extended/compile/unminified/ng-img-crop.js',
+        './bower_components/angular-datetime/dist/datetime.js'
     ],
     appModules: [
         './app/module.js',
@@ -54,6 +55,8 @@ var paths = {
         './app/*.js',
         './app/**/*.js',
         './app/*.mdl.js',
+        './app/**/*.mdl.js',
+        './app/**/**/*.mdl.js',
         './app/common/*.mdl.js',
         './app/common/**/*.mdl.js',
         './app/common/**/**/*.mdl.js',

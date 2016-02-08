@@ -506,6 +506,152 @@ angular
 		.value('fbFlags', flags)
 
 })();
+(function(){
+  angular
+    .module('pi')
+    .factory('piNavigationBuilder', [function(){
+        function builder(idOrModel) {
+
+          var self = this,
+              cfg = {
+
+              };
+          if(_.isObject(idOrModel)) {
+            cfg['id'] = idOrModel.id;
+          } else if(_.isString(idOrModel)) {
+            cfg['id'] = idOrModel;
+          } else {
+            cfg['id'] = 'random-id';
+          }
+
+          self.highlighted = false;
+          self.hidden = true;
+          self.menu = [];
+          self.isChild = false;
+
+          this.dispose = function() {
+            this.hidden = true;
+            self.menu = [];
+          }
+
+          this.addState = function(name, model) {
+            self.menu.push({
+              'name': name,
+              'model': model,
+              'type': 'link'
+            });
+
+          };
+
+          this.remove = function(name) {
+            for (var i = 0; i < self.menu.length; i++) {
+              if(self.menu[i].name === name) {
+                self.menu.splice(i, 1);
+                break;
+              }
+            };
+          };
+
+          this.addAction = function(name, callback) {
+            self.menu.push({
+              'name': name,
+              'callback': callback,
+              'type': 'callback'
+            })
+          
+          };
+
+          this.hide = function() {
+            if(self.hidden) {
+              $log.info('The menu ' + cfg['id'] + ' is already hidden. Nothing to be done.');
+              return;
+            }
+            self.hidden = true;
+          }
+
+          this.highlight = function() {
+            if(self.highlighted) {
+              $log.info('The menu ' + cfg['id'] + ' is already highlighted. Nothing to be done.');
+              return;
+            }
+            self.highlighted = true;
+          }
+
+          this.show = function() {
+            if(!self.hidden) {
+              $log.info('The menu ' + cfg['id'] + ' is already visible. Nothing to be done.');
+              return;
+            }
+            self.hidden = false;
+          }
+
+          this.id = function() {
+            return cfg['id'];
+          }
+
+          return self;
+        }
+
+        return builder;
+      }])
+      .provider('piNavigation', [function(){
+
+        return {
+          $get: ['$rootScope','$log', 'piNavigationBuilder', 'piStack', '$log',
+            function($rootScope, $log, piNavigationBuilder, piStack, $log) {
+              var menus = piStack.create(),
+                cfg = {
+                  icons: {
+                    remove: 'icon ion-android-delete',
+                    save: 'icon ion-android-delete',
+                    add: 'icon ion-android-delete',
+                    info: 'icon ion-android-delete'  
+                  }
+                };
+
+              this.setIcon = function(type, value) {
+                if(_.isArray(type)) {
+                  if(_.isUndefined(type['type']) || _.isUndefined(type['type'])) {
+                    $log.error('Cant add ' + type);
+                  }
+                  for (var i = 0; i < type.length; i++) {
+                    cfg.icons[type[i].type] = type[i].value;
+                  };
+                }
+                cfg.icons[type] = value;
+              }
+
+              return {
+                create: function(id) {
+                  var menu = piNavigationBuilder(id);
+                  menus.add(id, menu);
+                  return menu;
+                },
+                close: function(id) {
+                  menus.remove(id);
+                }
+              }
+            }]
+
+        }
+      }])
+      .directive('piNavigationTemplate', ['piNavigationProvider',
+        function(piNavigationProvider) {
+          return {
+            scope: {
+              'menu': '@'
+            },
+            link: function(scope, elem, attrs, ngModel) {
+              scope.menu = piNavigationProvider.create();
+
+              scope.close = function() {
+                piNavigationProvider.close(scope.menu.id());
+              }
+            }
+          }
+        }
+      ]);
+})();
 /**
  * Pi Provider
  *
@@ -4211,6 +4357,18 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 (function(){
 	angular
 		.module('pi.core.article')
+		.factory('$piArticleStateEnum', function(){
+			return {
+				Draft: 1,
+				Published: 2,
+				Censored: 3,
+				Removed: 99
+			};
+		});
+})();
+(function(){
+	angular
+		.module('pi.core.article')
 		.factory('pi.core.article.articleSvc', ['piHttp', '$log', function(piHttp, $log){
 
 			var self = this;
@@ -4307,6 +4465,34 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 					id: id,
 					date: date
 				});
+			}
+
+			this.postCategory = function(id, catId){
+				return piHttp.post('/article-save-category/' + id, {
+					id: id,
+					categoryId: catId
+				});
+			}
+
+			this.postState = function(id, state){
+				return piHttp.post('/article-state/' + id, {
+					id: id,
+					state: state
+				});
+			}
+
+			this.postKeywords = function(id, keywords) {
+				return piHttp.post('/article-keywords/' + id, {
+					id: id,
+					keywords: _.isArray(keywords) ? keywords : [keywords]
+				});	
+			}
+
+			this.removeKeywords = function(id, keywords) {
+				return piHttp.delete('/article-keywords/' + id, {
+					id: id,
+					keywords: _.isArray(keywords) ? keywords : [keywords]
+				});	
 			}
 
 			this.postReffer = function(id, name, url, image){
@@ -4447,6 +4633,18 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 (function(){
 	angular
 		.module('pi.core.app')
+		.factory('$piEventStateEnum', function(){
+			return {
+				Draft: 1,
+				Published: 2,
+				Censored: 3,
+				Removed: 99
+			};
+		});
+})();
+(function(){
+	angular
+		.module('pi.core.app')
 		.factory('pi.core.app.eventSubSvc', ['piHttp', function(piHttp){
 			
 			this.post = function(model) {
@@ -4494,6 +4692,41 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 			this.put = function(id, model) {
 				return piHttp.post('/event/' + id, model);
 			};
+
+			this.postPublisheDate = function(id, date){
+				return piHttp.post('/event-publish/' + id, {
+					id: id,
+					date: date
+				});
+			}
+
+			this.postCategory = function(id, catId){
+				return piHttp.post('/event-save-category/' + id, {
+					id: id,
+					categoryId: catId
+				});
+			}
+
+			this.postState = function(id, state){
+				return piHttp.post('/event-state/' + id, {
+					id: id,
+					state: state
+				});
+			}
+
+			this.postKeywords = function(id, keywords) {
+				return piHttp.post('/event-keywords/' + id, {
+					id: id,
+					keywords: _.isArray(keywords) ? keywords : [keywords]
+				});	
+			}
+
+			this.removeKeywords = function(id, keywords) {
+				return piHttp.delete('/event-keywords/' + id, {
+					id: id,
+					keywords: _.isArray(keywords) ? keywords : [keywords]
+				});	
+			}
 
 			return this;
 		}]);
@@ -4678,6 +4911,65 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 })();
 (function(){
 	angular
+		.module('pi.core.place')
+		.factory('pi.core.place.placeCategorySvc', ['piHttp', function(piHttp){
+
+			this.post = function(model){
+				return piHttp.post('/place-category', model);
+			}
+
+			this.remove = function(id){
+				return piHttp.post('/place-category-remove/' + id);
+			}
+
+			this.get = function(id, model) {
+				return piHttp.get('/place-category/' + id, model);
+			}
+
+			this.find = function(model) {
+				return piHttp.get('/place-category', {params: model});
+			};
+
+			this.put = function(id, model) {
+				return piHttp.post('/place-serie/' + id, model);
+			};
+
+			return this;
+		}]);
+})();
+
+(function(){
+	'use strict';
+
+	angular
+		.module('pi.core.place')
+		.factory('pi.core.place.placeSvc', ['piHttp', function(piHttp){
+
+			this.post = function(model){
+				return piHttp.post('/place', model);
+			}
+
+			this.get = function(id, model) {
+				return piHttp.get('/place/' + id, model);
+			}
+
+			this.find = function(model) {
+				return piHttp.get('/place', {params: model});
+			};
+
+			this.remove = function(id) {
+				return piHttp.post('/place-remove/' + id);
+			};
+
+			this.put = function(id, model) {
+				return piHttp.post('/place/' + id, model);
+			};
+
+			return this;
+		}]);
+})();
+(function(){
+	angular
 		.module('pi.core.product')
 		.factory('pi.core.product.businessEntity', [function(){
 			var svc = [
@@ -4857,6 +5149,82 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 		}]);
 })();
 
+/*
+window.sqlitePlugin = {};
+window.sqlitePlugin.openDatabase = function() {
+	return window.openDatabase('pi', '1.0', 'pidb', 10000000);
+}
+
+(function(){
+	
+	angular
+		.module('pi.ionic.article')
+		.factory('pi.ionic.db', ['$log', function($log) {
+
+			this.processQueries = function(db, queries, dbName) {
+				db.transaction(function(tx) {
+					for (var i = 0; i < queries.length; i++) {
+						tx.executeSql(queries[i], [], 
+							function() {
+								$log.debug(queries.length + ' queries processed.');
+							}, function(tx, err) {
+								$log.debug('failed to process queries');
+							});
+					};
+				})
+			}
+
+			return this;
+		}])
+		.factory('pi.ionic.article.articleSvc', ['piHttp', '$ionicPlatform', '$cordovaSQLite', function(piHttp, $ionicPlatform, $cordovaSQLite){
+
+			var db;
+
+			window.document.addEventListener('deviceready', function(){
+				db = $cordovaSQLite.openDB({
+					name: 'pi',
+					bgType: 1
+				});
+			}, false);
+
+
+			this.post = function(id, name, headline, articleBody, dateCreated, datePublished, state){
+				var query = 'INSERT INTO article (id, name, headline, articleBody, dateCreated, datePublished, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
+					args = [id, name, headline, articleBody, dateCreated, datePublished, state],
+					promise = $cordovaSQLite.execute(db, query, args)
+						.then(function(res){
+							return res;
+						});
+				
+				return promise;
+			}
+
+			this.remove = function(id) {
+				return piHttp.post('/article-remove/' + id);
+			}
+
+			this.put = function(id, model) {
+				return piHttp.post('/article/' + id, model);
+			}
+
+			this.get = function(id, model) {
+				return piHttp.get('/article/' + id, model);
+			}
+
+			this.find = function(model) {
+				var query = 'SELECT * FROM article',
+					promise = $cordovaSQLite.execute(db, query, [])
+						.then(function(res){
+							return res.rows;
+						});
+
+				return promise;
+			};
+			return this;
+		}]);
+})();
+
+*/
 (function(){
 	
 	var apiFn = function(){
@@ -5265,141 +5633,6 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 })();
 
 
-/*
-window.sqlitePlugin = {};
-window.sqlitePlugin.openDatabase = function() {
-	return window.openDatabase('pi', '1.0', 'pidb', 10000000);
-}
-
-(function(){
-	
-	angular
-		.module('pi.ionic.article')
-		.factory('pi.ionic.db', ['$log', function($log) {
-
-			this.processQueries = function(db, queries, dbName) {
-				db.transaction(function(tx) {
-					for (var i = 0; i < queries.length; i++) {
-						tx.executeSql(queries[i], [], 
-							function() {
-								$log.debug(queries.length + ' queries processed.');
-							}, function(tx, err) {
-								$log.debug('failed to process queries');
-							});
-					};
-				})
-			}
-
-			return this;
-		}])
-		.factory('pi.ionic.article.articleSvc', ['piHttp', '$ionicPlatform', '$cordovaSQLite', function(piHttp, $ionicPlatform, $cordovaSQLite){
-
-			var db;
-
-			window.document.addEventListener('deviceready', function(){
-				db = $cordovaSQLite.openDB({
-					name: 'pi',
-					bgType: 1
-				});
-			}, false);
-
-
-			this.post = function(id, name, headline, articleBody, dateCreated, datePublished, state){
-				var query = 'INSERT INTO article (id, name, headline, articleBody, dateCreated, datePublished, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
-					args = [id, name, headline, articleBody, dateCreated, datePublished, state],
-					promise = $cordovaSQLite.execute(db, query, args)
-						.then(function(res){
-							return res;
-						});
-				
-				return promise;
-			}
-
-			this.remove = function(id) {
-				return piHttp.post('/article-remove/' + id);
-			}
-
-			this.put = function(id, model) {
-				return piHttp.post('/article/' + id, model);
-			}
-
-			this.get = function(id, model) {
-				return piHttp.get('/article/' + id, model);
-			}
-
-			this.find = function(model) {
-				var query = 'SELECT * FROM article',
-					promise = $cordovaSQLite.execute(db, query, [])
-						.then(function(res){
-							return res.rows;
-						});
-
-				return promise;
-			};
-			return this;
-		}]);
-})();
-
-*/
-(function(){
-	angular
-		.module('pi.core.place')
-		.factory('pi.core.place.placeCategorySvc', ['piHttp', function(piHttp){
-
-			this.post = function(model){
-				return piHttp.post('/place-category', model);
-			}
-
-			this.remove = function(id){
-				return piHttp.post('/place-category-remove/' + id);
-			}
-
-			this.get = function(id, model) {
-				return piHttp.get('/place-category/' + id, model);
-			}
-
-			this.find = function(model) {
-				return piHttp.get('/place-category', {params: model});
-			};
-
-			this.put = function(id, model) {
-				return piHttp.post('/place-serie/' + id, model);
-			};
-
-			return this;
-		}]);
-})();
-
-(function(){
-	'use strict';
-
-	angular
-		.module('pi.core.place')
-		.factory('pi.core.place.placeSvc', ['piHttp', function(piHttp){
-
-			this.post = function(model){
-				return piHttp.post('/place', model);
-			}
-
-			this.get = function(id, model) {
-				return piHttp.get('/place/' + id, model);
-			}
-
-			this.find = function(model) {
-				return piHttp.get('/place', {params: model});
-			};
-
-			this.remove = function(id) {
-				return piHttp.post('/place-remove/' + id);
-			};
-
-			this.put = function(id, model) {
-				return piHttp.post('/place/' + id, model);
-			};
-
-			return this;
-		}]);
-})();
 (function(){
 
 	var svcFn = function($http, $q){

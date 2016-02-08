@@ -1,0 +1,49 @@
+<div class="view-1">
+    <div class="view-1__side">
+        <button pi-media-upload-trigger ng-model="ctrl.model.image">Choose Image</button>
+        <img ng-show="ctrl.model.image != ''" ng-src="{{ctrl.model.image}}" />
+    </div>
+    <div class="view-1__content">
+        <div class="pi-form__wrapper">
+            <form class="fit-form" name="createForm">
+                <div class="pi-form__group">
+                    <input class="pi-form__control" type="text" required class="pi-form__group-control" placeholder="Título do Evento" ng-model="ctrl.model.title" />
+                </div>
+                <div class="pi-form__group">
+                    <select ng-model="ctrl.categorySelect" class="pi-form__control" ng-options="option.displayName for option in $root.eventCategories track by option.id">
+                    </select>
+                </div>
+                <div class="pi-form__group">
+                    <select ng-model="ctrl.stateSelect" class="pi-form__control" ng-options="option.name for option in $root.eventStates track by option.id">
+                    </select>
+                </div>
+                <div class="pi-form__group">
+                    <tags-input ng-model="ctrl.model.tags"></tags-input>
+                </div>
+                <div class="pi-form__group">
+                    <input placeholder="Data de Inicio" required class="pi-form__control" datetime="yyyy-MM-dd HH:mm:ss" ng-model="ctrl.model.doorTime" />
+                </div>
+                <div class="pi-form__group">
+                    <input placeholder="Data de Fim" required class="pi-form__control" datetime="yyyy-MM-dd HH:mm:ss" ng-model="ctrl.model.endDate" />
+                </div>
+                <div class="pi-form__group">
+                    <input placeholder="Um excerpto da Notícia" required class="pi-form__control" type="text" ng-model="ctrl.model.excerpt" />
+                </div>
+                <div class="pi-form__group">
+                    <div placeholder="O conteúdo principal da Notícia" text-angular  ng-model="ctrl.model.content"></div>
+                </div>
+                <div class="pi-form__group">
+                    <ui-select ng-model="ctrl.refferSelect" theme="selectize">
+                        <ui-select-match placeholder="Referencia">{{$select.selected.name}}</ui-select-match>
+                        <ui-select-choices repeat="cat in ctrl.reffers | filter: $select.search">
+                            <span ng-bind="cat.name | highlight: $select.search"></span>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+                <div class="pi-form__footer">
+                    <button ng-disabled="createForm.$invalid || createForm.$pristine" ng-click="ctrl.create()">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

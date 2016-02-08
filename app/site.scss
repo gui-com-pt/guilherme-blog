@@ -26,6 +26,18 @@ $susy: (
 }
 
 
+.admin-author {
+  height: 1em;
+}
+
+.admin-author {
+  max-width: 100%;
+}
+
+.admin-author__avatar {
+  height: 1em;
+}
+
 /*
  * copy to PI - temporary
  */
@@ -194,4 +206,12 @@ ul {
   float: right;
   display: block;
   cursor: pointer;
+}
+
+.pi-table__action-col {
+  white-space: nowrap;
+
+  button {
+    @extend .button-small;
+  }
 }

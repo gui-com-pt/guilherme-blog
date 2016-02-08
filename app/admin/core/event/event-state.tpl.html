@@ -1,0 +1,13 @@
+<div class="view-small">
+    <div class="pi-form__wrapper">
+        <form class="fit-form" name="createForm">
+            <div class="pi-form__group">
+                <select ng-model="ctrl.stateSelect" class="pi-form__control" ng-options="option.name for option in $root.eventStates track by option.id">
+                </select>
+            </div>
+            <div class="pi-form__footer">
+                <button pi-btn-save ng-disabled="createForm.$invalid || createForm.$pristine" ng-click="ctrl.save()">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>

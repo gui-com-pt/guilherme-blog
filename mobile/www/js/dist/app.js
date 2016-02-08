@@ -47,6 +47,97 @@ function getCookie(cname) {
         .module('templates', []);
 
     angular
+      .module('codigo.admin', ['codigo', 'ui.router', 'pi.common']);
+
+    angular
+      .module('codigo.admin.core', ['codigo', 'codigo.admin']);
+
+    angular
+      .module('codigo.admin.core')
+      .config(['$stateProvider', 
+        function($stateProvider) {
+
+          $stateProvider
+            .state('admin-article-list', {
+              url: '/admin/article-list',
+              controller: 'admin.core.article.articleListCtrl',
+              controllerAs: 'ctrl',
+              templateUrl: 'admin/core/article/article-list.tpl.html'
+            })
+            .state('admin-article-state', {
+                url: '/artigo-state/:id',
+                templateUrl: 'admin/core/article/article-state.tpl.html',
+                controller: 'admin.core.article.articleStateCtrl',
+                controllerAs: 'ctrl'
+            })
+             .state('admin-article-category-save', {
+                url: '/artigo-category-save/:id',
+                templateUrl: 'admin/core/article/article-category-save.tpl.html',
+                controller: 'admin.core.article.articleSaveCategoryCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-category', {
+                url: '/artigo-category/:id',
+                templateUrl: 'admin/core/article/article-category.tpl.html',
+                controller: 'admin.core.article.articleCategoryCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-create', {
+                url: '/artigo-novo',
+                templateUrl: 'admin/core/article/article-create.tpl.html',
+                controller: 'admin.core.article.articleCreateCtrl',
+                controllerAs: 'ctrl'
+            })
+            .state('admin-article-save', {
+                url: '/article-save/:id',
+                templateUrl: 'admin/core/article/article-save.tpl.html',
+                controller: 'admin.core.article.articleSaveCtrl',
+                controllerAs: 'ctrl'
+            });
+
+        }])
+      .directive('adminAuthor', [function(){
+        return {
+          link: function(scope, elem, attrs) {
+
+          },
+          scope: {
+            'entity': '@'
+          },
+          template: '<a class="admin-author"><img class="admin-author__avatar" src="http://gravatar.com/avatar/e53ef2b311753a8e087dfa4994125022?s=512" /><span class="author__name" ng-bind="author.displayName"></span></a>'
+        }
+      }])
+      .directive('articleStateBadge', [function(){
+        return {
+          link: function(scope, elem, attrs, ngModel) {
+            scope.$watch(function() {
+              return ngModel.$modelValue;
+            }, function(newValue) {
+              if(!_.isNumber(newValue)) {
+                scope.displayText = 'N/A';
+                return;
+              }
+
+              switch(newValue)
+              {
+                case 1:
+                  scope.displayText = 'Draft';
+                  break;
+                case 2:
+                  scope.displayText = 'Published';
+                  break;
+                case 3:
+                  scope.displayText = 'Censored';
+                  break;
+              }
+            })
+          },
+          require: '^ngModel',
+          template: '<span class="badge badge-state">{{displayText}}</span>'
+        }
+      }]);
+
+    angular
         .module('codigo.core', ['codigo']);
 
     angular
@@ -56,10 +147,11 @@ function getCookie(cname) {
         .module('codigo.core.question', ['codigo.core']);
 
   angular
-    .module('codigo', ['templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
+    .module('codigo', ['codigo.admin.core', 'codigo.admin', 'templates', 'pi.core', 'pi.core.app', 'pi.core.question', 'pi.core.payment', 'pi.core.chat', 'pi.core.likes', 'pi.core.product', 'codigo.core', 'codigo.core.article', 'codigo.core.question',
   'pi.core.file','pi.googleAdsense', 'ngImgCrop', 'pi.common',
       'ui.router', 'ui.bootstrap.modal', 'textAngular', 'infinite-scroll', 'ngFileUpload', 'ui.select', 'angularMoment', 'pi',
-      'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile']);
+      'piClassHover', 'ngTagsInput', '720kb.socialshare', 'wu.masonry', 'config', 'angular-bind-html-compile',
+      'datetime']);
 
   angular
     .module('codigo')
@@ -70,7 +162,7 @@ function getCookie(cname) {
 
         $urlRouterProvider.otherwise('/');
 
-        piHttpProvider.setBaseUrl('https://guilherme.ovh/api');
+        piHttpProvider.setBaseUrl('http://localhost/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');
@@ -212,18 +304,6 @@ function getCookie(cname) {
                   controller: 'codigo.core.article.articleListCtrl',
                   controllerAs: 'ctrl'
               })
-              .state('article-create', {
-                  url: '/artigo-novo',
-                  templateUrl: 'core/article/article-create.tpl.html',
-                  controller: 'codigo.core.article.articleCreateCtrl',
-                  controllerAs: 'ctrl'
-              })
-              .state('article-save', {
-                  url: '/artigo-editar/:id',
-                  templateUrl: 'core/article/article-save.tpl.html',
-                  controller: 'codigo.core.article.articleSaveCtrl',
-                  controllerAs: 'ctrl'
-              })
               .state('article-view', {
                   url: '/blog/:categories/:name--:id',
                   templateUrl: 'core/article/article-view.tpl.html',
@@ -232,9 +312,62 @@ function getCookie(cname) {
               });
 
       }])
-    .run(['$rootScope', 'pi.core.article.articleCategorySvc', '$state', 'codigoModel', '$window', '$location',
-      function($rootScope, categorySvc, $state, codigoModel, $window, $location){
+    .run(['$rootScope', 'pi.core.app.eventCategorySvc', 'pi.core.article.articleCategorySvc', '$state', '$stateParams', 'codigoModel', '$window', '$location',
+      function($rootScope, eventCategorySvc, categorySvc, $state, $stateParams, codigoModel, $window, $location){
+
         $rootScope.$location = $location;
+        $rootScope.$state = $state;
+        $rootScope.$stateParams = $stateParams;
+        $rootScope.$on("$stateChangeSuccess",  function(event, toState, toParams, fromState, fromParams) {
+            $rootScope.previousState_name = fromState.name;
+            $rootScope.previousState_params = fromParams;
+        });
+        
+        $rootScope.goPreviousState = function(defaultState) {
+            if(_.isEmpty($rootScope.previousState_name) && _.isString(defaultState)) {
+              $state.go(defaultState);
+            } else {
+              $state.go($rootScope.previousState_name,$rootScope.previousState_params);
+            }
+        };
+
+        $rootScope.articleStates = [
+          {
+            id: 1,
+            name: 'Draft'
+          },
+          {
+            id: 2,
+            name: 'Published'
+          },
+          {
+            id: 3,
+            name: 'Censored'
+          },
+          {
+            id: 99,
+            name: 'Removed'
+          }
+        ];
+
+        $rootScope.eventStates = [
+          {
+            id: 1,
+            name: 'Draft'
+          },
+          {
+            id: 2,
+            name: 'Published'
+          },
+          {
+            id: 3,
+            name: 'Censored'
+          },
+          {
+            id: 99,
+            name: 'Removed'
+          }
+        ];
 
         $rootScope.isAuthenticated = codigoModel.isAuthenticated;
         $rootScope.codigoModel = codigoModel;
@@ -254,6 +387,12 @@ function getCookie(cname) {
         categorySvc.find({take: 100})
           .then(function(res){
             $rootScope.categories = res.data.categories;
+            $rootScope.articleCategories = res.data.categories;
+          });
+
+        eventCategorySvc.find({take: 100})
+          .then(function(res){
+            $rootScope.eventCategories = res.data.categories;
           });
     }]);
 })();
@@ -262,10 +401,10 @@ function getCookie(cname) {
 function baseListCtrl($scope, $stateParams) {
   var self = this;
 
-  this.perPage = 12;
-  this.results = [];
+  self.perPage = 12;
+  self.results = [];
 
-  this.queryModel = {
+  self.queryModel = {
       busy: false
   };
 
@@ -745,92 +884,27 @@ function baseListCtrl($scope, $stateParams) {
 })();
 
 (function(){
-    var SportsNewsCreateCtrl = function(articleSvc, $state, $rootScope){
-        var self = this;
-        this.model = {}; // the form model
-
-        this.create = function(){
-            var model = angular.copy(this.model);
-            model.title = model.displayName;
-            model.keywords = [];
-            angular.forEach(this.model.keywords, function(v, k){
-                model.keywords.push(v.text);
-            });
-            if(!_.isUndefined(self.categorySelect)) {
-                model.categoryId = self.categorySelect.id;
-            }
-            articleSvc.post(model).then(function(res){
-                $rootScope.categories.push(res.data.category);
-                $state.go('article-list');
-            });
-        };
-    };
-
-    SportsNewsCreateCtrl.$inject = ['pi.core.article.articleSvc', '$state', '$rootScope'];
-
-    angular
-        .module('codigo')
-        .controller('codigo.core.article.articleCreateCtrl', SportsNewsCreateCtrl);
-})();
-(function(){
 
   angular
       .module('codigo')
-      .controller('codigo.core.article.articleListCtrl', ['pi.core.article.articleSvc', '$scope', '$stateParams',
-      function(articleSvc, $scope, $stateParams){
+      .controller('codigo.core.article.articleListCtrl', ['pi.core.article.articleSvc', '$scope', '$stateParams', '$piEventStateEnum',
+      function(articleSvc, $scope, $stateParams, $piEventStateEnum){
           baseListCtrl.call(this, $scope, $stateParams);
           var self = this;
 
           this.getData = function() {
-            return articleSvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
-                //self.queryModel.busy = false;
+            var model = self.getQueryModel(['name', 'categoryId']);
+            model.state = $piEventStateEnum.Published;
+            return articleSvc.find(model).then(function(r){
                 return r.data.articles || r.data;
             }, function(){
-                //self.queryModel.busy = false;
+                
             });
           }
 
       }]);
 })();
 
-(function(){
-    var ctrl = function(articleSvc, $state, $stateParams){
-        var self = this;
-        this.model = {}; // the form model
-        this.modelBusy = false;
-
-        self.modelBusy = true;
-        articleSvc.get($stateParams.id)
-            .then(function(res){
-                self.model = res.data.article;
-                self.modelBusy = false;
-            });
-
-        this.save = function(){
-            var model = angular.copy(this.model);
-            model.title = model.displayName;
-            if(!_.isUndefined(self.categorySelect)) {
-                model.categoryId = self.categorySelect.id;
-            }
-
-            articleSvc.put($stateParams.id, model).then(function(res){
-                $state.go('article-list');
-            });
-        };
-
-        this.remove = function(){
-            articleSvc.remove($stateParams.id).then(function(res){
-                $state.go('article-list');
-            });
-        }
-    };
-
-    ctrl.$inject = ['pi.core.article.articleSvc', '$state', '$stateParams'];
-
-    angular
-        .module('codigo')
-        .controller('codigo.core.article.articleSaveCtrl', ctrl);
-})();
 (function(){
     var SportsNewsViewCtrl = function(articleSvc, $scope, $stateParams, facebookMetaService) {
         this.id = $stateParams.id;
@@ -990,4 +1064,410 @@ function baseListCtrl($scope, $stateParams) {
     angular
         .module('codigo')
         .controller('codigo.core.question.questionViewCtrl', SportsNewsViewCtrl);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleSaveCategoryCtrl', ['pi.core.article.articleSvc', '$rootScope',
+            function(articleSvc, $rootScope){
+                var self = this;
+                self.modelBusy = false;
+
+                articleSvc.get($rootScope.$stateParams.id).then(function(res){
+                    self.category = res.data.category;
+                });
+
+                this.save = function(tag){
+                    var catId = self.categorySelect.id;
+
+                    articleSvc.postCategory($rootScope.$stateParams.id, catId).then(function(res){
+                        $rootScope.goPreviousState('admin-article-list');
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleCategoryCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
+            function(articleSvc, $state, $stateParams){
+                var self = this;
+                self.modelBusy = false;
+
+                articleSvc.get($stateParams.id).then(function(res){
+                    self.keywords = res.data.keywords;
+                });
+
+                this.save = function(tag){
+                    articleSvc.postKeywords($stateParams.id, [tag]).then(function(res){
+                        self.keywords = res.data.keywords;
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleCreateCtrl', ['pi.core.article.articleSvc', '$state', '$rootScope',
+            function(articleSvc, $state, $rootScope){
+                var self = this;
+                this.model = {}; // the form model
+
+                this.create = function(){
+                    var model = angular.copy(this.model);
+                    model.title = model.displayName;
+                    model.keywords = [];
+                    angular.forEach(this.model.keywords, function(v, k){
+                        model.keywords.push(v.text);
+                    });
+
+                    if(!_.isUndefined(self.categorySelect)) {
+                        model.categoryId = self.categorySelect.id;
+                    }
+
+                    if(!_.isUndefined(self.stateSelect)) {
+                        model.state = self.stateSelect.id;
+                    }
+                    
+                    articleSvc.post(model).then(function(res){
+                        $rootScope.categories.push(res.data.category);
+                        $state.go('admin-article-list');
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleKeywordCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
+            function(articleSvc, $state, $stateParams){
+                var self = this;
+                self.modelBusy = false;
+
+                articleSvc.get($stateParams.id).then(function(res){
+                    self.keywords = res.data.keywords;
+                });
+
+                this.save = function(tag){
+                    articleSvc.postKeywords($stateParams.id, [tag]).then(function(res){
+                        self.keywords = res.data.keywords;
+                    });
+                };
+
+                this.remove = function(tag) {
+                    articleSvc.removeKeywords($stateParams.id, [tag])
+                        .then(function(res) {
+                            for (var i = 0; i < self.keywords.length; i++) {
+                                if(self.keywords[i] === tag) {
+                                    self.keywords.splice(i, 1);
+                                    break;
+                                }
+                            };
+                        });
+                }
+            }
+        ]);
+})();
+(function(){
+
+  angular
+      .module('codigo.admin.core')
+      .controller('admin.core.article.articleListCtrl', ['pi.core.article.articleSvc', '$scope', '$stateParams',
+      function(articleSvc, $scope, $stateParams){
+          baseListCtrl.call(this, $scope, $stateParams);
+          var self = this;
+
+          this.getData = function() {
+            var model = self.getQueryModel(['name', 'categoryId']);
+            
+            return articleSvc.find(model).then(function(r){
+                return r.data.articles || r.data;
+            }, function(){
+            });
+          }
+
+      }]);
+})();
+
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleSaveCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
+            function(articleSvc, $state, $stateParams){
+                var self = this;
+                this.model = {}; // the form model
+                this.modelBusy = false;
+
+                self.modelBusy = true;
+                articleSvc.get($stateParams.id)
+                    .then(function(res){
+                        self.model = res.data.article;
+                        self.state = res.data.article.state;
+                        self.modelBusy = false;
+                    });
+
+                this.save = function(){
+                    var model = angular.copy(this.model);
+                    model.title = model.displayName;
+                    if(!_.isUndefined(self.categorySelect)) {
+                        model.categoryId = self.categorySelect.id;
+                    }
+
+                    articleSvc.put($stateParams.id, model).then(function(res){
+                        $state.go('admin-article-list');
+                    });
+                };
+
+                this.remove = function(){
+                    articleSvc.remove($stateParams.id).then(function(res){
+                        $state.go('admin-article-list');
+                    });
+                }
+            }
+        ]);
+
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.article.articleStateCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
+            function(articleSvc, $state, $stateParams){
+                var self = this;
+                self.modelBusy = false;
+
+                this.save = function(){
+                    articleSvc.postState($stateParams.id, self.stateSelected.id).then(function(res){
+                        $state.go('admin-article-list');
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.event.categoryCreateCtrl', ['pi.core.app.eventCategorySvc', '$state', function(categorySvc, $state){
+
+            var self = this;
+            this.model = {};
+
+            this.create = function(){
+                categorySvc.post(self.model)
+                    .then(function(res){
+                        $state.go('admin-event-category-list');
+                    });
+            }
+        }]);
+})();
+(function(){
+    angular
+        .module('codigo')
+        .controller('admin.core.event.categoryListCtrl', ['$scope', '$stateParams', 'pi.core.app.eventCategorySvc', 'facebookMetaService', 
+        	function($scope, $stateParams, eventCategorySvc, facebookMetaService){
+            	
+            	
+				baseListCtrl.call(this, $scope, $stateParams);
+          		var self = this;
+
+				this.getData = function() {
+					return eventCategorySvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
+					    return r.data.categories || r.data;
+						}, function(){
+						});
+				}
+        }])
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.event.eventSaveCategoryCtrl', ['pi.core.app.eventSvc', '$rootScope',
+            function(eventSvc, $rootScope){
+                var self = this;
+                self.modelBusy = false;
+
+                eventSvc.get($rootScope.$stateParams.id).then(function(res){
+                    self.category = res.data.category;
+                });
+
+                this.save = function(tag){
+                    var catId = self.categorySelect.id;
+
+                    eventSvc.postCategory($rootScope.$stateParams.id, catId).then(function(res){
+                        $rootScope.goPreviousState('admin-article-list');
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+    var ctrl = function(eventSvc, $state, $rootScope){
+        var self = this;
+        this.model = {}; // the form model
+
+        this.create = function(){
+            var model = angular.copy(this.model);
+            model.tags = [];
+            angular.forEach(this.model.tags, function(v, k){
+                model.tags.push(v.text);
+            });
+
+            if(!_.isUndefined(self.categorySelect)) {
+                model.categoryId = self.categorySelect.id;
+            }
+
+            if(!_.isUndefined(self.stateSelect)) {
+                model.state = self.stateSelect.id;
+            }
+
+            if(!_.isUndefined(self.refferSelect)) {
+                model.refferName = self.refferSelect.name;
+                model.refferUrl = self.refferSelect.url;
+                model.refferImage = self.refferSelect.image;
+            }
+
+            eventSvc.post(model).then(function(res){
+                $state.go('admin-event-list');
+            });
+        };
+    };
+
+    ctrl.$inject = ['pi.core.app.eventSvc', '$state', '$rootScope'];
+
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.event.eventCreateCtrl', ctrl);
+})();
+(function(){
+
+	angular
+	  	.module('codigo.admin.core')
+	  	.controller('admin.core.event.eventListCtrl', ['pi.core.app.eventSvc', '$scope', '$stateParams', 
+	  		function(eventSvc, $scope, $stateParams){
+	  			baseListCtrl.call(this, $scope, $stateParams);
+	          	var self = this;
+
+	          	this.getData = function() {
+	            	return eventSvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
+	               	 return r.data.events || r.data;
+	            	}, function(){
+
+	            	});
+	          	}
+	      	}
+		]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.event.eventSaveCtrl', ['pi.core.app.eventSvc', '$state', '$stateParams',
+            function(eventSvc, $state, $stateParams){
+                var self = this;
+                this.model = {}; // the form model
+                this.modelBusy = false;
+
+                self.modelBusy = true;
+                eventSvc.get($stateParams.id)
+                    .then(function(res){
+                        self.model = res.data.event;
+                        self.model.doorTime = new Date(self.model.doorTime)
+                        self.model.endDate = new Date(self.model.endDate);
+                        self.state = res.data.event.state;
+                        self.modelBusy = false;
+                    });
+
+                this.save = function(){
+                    var model = angular.copy(this.model);
+                    eventSvc.put($stateParams.id, model).then(function(res){
+                        $state.go('admin-event-list');
+                    });
+                };
+
+                this.remove = function(){
+                    eventSvc.remove($stateParams.id).then(function(res){
+                        $state.go('admin-event-list');
+                    });
+                }
+            }
+        ]);
+})();
+(function(){
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.event.eventStateCtrl', ['pi.core.app.eventSvc', '$state', '$stateParams',
+            function(eventSvc, $state, $stateParams){
+                var self = this;
+                self.modelBusy = false;
+
+                this.save = function(){
+                    eventSvc.postState($stateParams.id, self.stateSelect.id).then(function(res){
+                        $state.go('admin-event-list');
+                    });
+                };
+            }
+        ]);
+})();
+(function(){
+
+	angular
+		.module('codigo.admin.core')
+		.config(['$stateProvider', function($stateProvider){
+			$stateProvider
+				.state('admin-event-category-create', {
+					url: '/eventos-categoria-nova',
+					templateUrl: 'admin/core/event/category-create.tpl.html',
+					controller: 'admin.core.event.categoryCreateCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-category-change', {
+					url: '/eventos-categoria-alterar/:id',
+					templateUrl: 'admin/core/event/event-category-save.tpl.html',
+					controller: 'admin.core.event.eventSaveCategoryCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-category-save', {
+					url: '/eventos-categoria-editar/:id',
+					templateUrl: 'admin/core/event/category-save.tpl.html',
+					controller: 'admin.core.event.categorySaveCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-category-list',{
+					url: '/eventos-categorias',
+					templateUrl: 'admin/core/event/category-list.tpl.html',
+					controller: 'admin.core.event.categoryListCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-list',{
+					url: '/eventos',
+					templateUrl: 'admin/core/event/event-list.tpl.html',
+					controller: 'admin.core.event.eventListCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-view',{
+					url: '/eventos/:id',
+					templateUrl: 'admin/core/event/event-view.tpl.html',
+					controller: 'admin.core.event.eventViewCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-save',{
+					url: '/evento/:id/editar',
+					templateUrl: 'admin/core/event/event-save.tpl.html',
+					controller: 'admin.core.event.eventSaveCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-create',{
+					url: '/evento/create',
+					templateUrl: 'admin/core/event/event-create.tpl.html',
+					controller: 'admin.core.event.eventCreateCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-event-state', {
+					url: '/event/:id/state',
+					templateUrl: 'admin/core/event/event-state.tpl.html',
+					controller: 'admin.core.event.eventStateCtrl',
+					controllerAs: 'ctrl'
+				});
+		}]);
 })();

@@ -1,0 +1,32 @@
+<div class="view-1">
+    <div class="view-1__side">
+        <div class="upload-thumbnail" upload-thumbnail ng-model="ctrl.model.image"></div>
+        <span article-state-badge ng-model="ctrl.state"></span>
+    </div>
+    <div class="view-1__content">
+        <div class="fit-form__wrapper">
+            <form class="fit-form" name="createForm">
+                <div class="fit-form__group">
+                    <input type="text" required class="pi-form__control" placeholder="Título da Notícia" ng-model="ctrl.model.title" />
+                </div>
+                <div class="fit-form__group">
+                    <input placeholder="Um exerpto da Notícia" required class="pi-form__control" type="text" ng-model="ctrl.model.excerpt" />
+                </div>
+                <div class="pi-form__group">
+                    <input placeholder="Data de Inicio" required class="pi-form__control" datetime="yyyy-MM-dd HH:mm:ss" ng-model="ctrl.model.doorTime" />
+                </div>
+                <div class="pi-form__group">
+                    <input placeholder="Data de Fim" required class="pi-form__control" datetime="yyyy-MM-dd HH:mm:ss" ng-model="ctrl.model.endDate" />
+                </div>
+                <div class="fit-form__group">
+                    <div placeholder="O conteúdo principal da Notícia" text-angular  ng-model="ctrl.model.content"></div>
+                </div>
+                <div class="fit-form__footer">
+                    <button ng-click="ctrl.remove()">Apagar</button>
+                    <button ng-click="ctrl.save()">Guardar Alterações</button>
+                </div>
+            </form>
+            <div class="fit-form__guide">Ajuda no plano de nutrição</div>
+        </div>
+    </div>
+</div>

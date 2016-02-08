@@ -1,0 +1,17 @@
+<div class="view-small">
+    <div class="pi-form__wrapper">
+        <form class="fit-form" name="createForm">
+            <div class="pi-form__group">
+                <ui-select required ng-model="ctrl.stateSelected" theme="selectize">
+                    <ui-select-match placeholder="Categorias">{{$select.selected.name}}</ui-select-match>
+                    <ui-select-choices repeat="cat in $root.articleStates | filter: $select.search">
+                        <span ng-bind="cat.name | highlight: $select.search"></span>
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+            <div class="pi-form__footer">
+                <button pi-btn-save ng-disabled="createForm.$invalid || createForm.$pristine" ng-click="ctrl.save()">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>

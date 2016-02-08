@@ -40,12 +40,21 @@
             <li><a ui-sref="article-list({categoryId: null, name: null})" ui-sref-opts="{reload: true}">guilherme.ovh</a></li>
             <li><a target="_blank" href="https://codigo.ovh">my portuguese blog</a></li>
             <li><a ui-sref="cv">my cv</a></li>
-            <li ng-show="$root.isAuthenticated"><a ui-sref="question-list">Perguntas</a></li>
-            <li ng-show="$root.isAuthenticated"><a href="">Gestão</a>
+            <li><a ui-sref="question-list">Perguntas</a></li>
+            <li><a href="">Manage</a>
                 <ul>
-                    <li><a ui-sref="article-create">Criar Artigo</a></li>
-                    <li><a ui-sref="category-list">Categorias</a></li>
-                    <li><a ui-sref="category-create">Criar Categoria</a></li>
+                  <li><a ui-sref="admin-article-list">Articles</a></li>
+                  <li><a ui-sref="admin-article-create">Criar Artigo</a></li>
+                  <li><a ui-sref="category-list">Categorias</a></li>
+                  <li><a ui-sref="category-create">Criar Categoria</a></li>
+                </ul>
+            </li>
+            <li><a href="">Eventos</a>
+                <ul>
+                  <li><a ui-sref="admin-event-list">Eventos</a></li>
+                  <li><a ui-sref="admin-event-create">Criar Evento</a></li>
+                  <li><a ui-sref="admin-event-category-list">Categorias</a></li>
+                  <li><a ui-sref="admin-event-category-create">Criar Categoria</a></li>
                 </ul>
             </li>
 

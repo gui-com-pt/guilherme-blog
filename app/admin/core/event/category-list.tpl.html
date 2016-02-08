@@ -1,0 +1,17 @@
+<a ui-sref="admin-event-category-create">Criar Categoria</a>
+
+<table infinite-scroll="ctrl.query()" infinite-scroll-disabled="ctrl.queryModel.busy" infinite-scroll-immediate-check="true" class="pi-table pi-table-data">
+	<thead class="pi-table__head">
+		<tr>
+			<td>Name</td>
+			<td></td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="ng-cloak" ng-show="ctrl.results.length === 0"><td>No results to display.</td></tr>
+		<tr ng-repeat="category in ctrl.results">
+	  		<td><span ng-bind="category.displayName"></span></td>
+	  		<td><button ui-sref="admin-event-save({id: category.id})">Editar</button></td>
+		</tr>
+	</tbody>
+</table>

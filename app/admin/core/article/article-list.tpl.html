@@ -1,0 +1,27 @@
+<table infinite-scroll="ctrl.query()" infinite-scroll-disabled="ctrl.queryModel.busy" infinite-scroll-immediate-check="true" class="pi-table pi-table-data">
+	<thead class="pi-table__head">
+		<tr>
+			<td>Title</td>
+			<td>Author</td>
+			<td>Published</td>
+			<td>Modified</td>
+			<td>State</td>
+			<td>Category</td>
+			<td></td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="ng-cloak" ng-show="ctrl.results.length === 0"><td>No results to display.</td></tr>
+		<tr ng-repeat="news in ctrl.results">
+	  		<td><span ng-bind="news.name"></span></td>
+	  		<td><div admin-author entity="news.author"></div></td>
+	  		<td><span ng-bind="news.datePublished"></span></td>
+	  		<td><span ng-bind="news.dateModified"></span></td>
+	  		<td><span article-state-badge ng-model="news.state"></span></td>
+	  		<td><span ng-bind="news.category.displayName"></span></td>
+	  		<td class="pi-table__action-col"><button ui-sref="admin-article-save({id: news.id})">Editar</button>
+	  			<button ui-sref="admin-article-state({id: news.id})">Estado</button>
+	  			<button ui-sref="admin-article-category-save({id: news.id})">Categoria</button></td>
+		</tr>
+	</tbody>
+</table>

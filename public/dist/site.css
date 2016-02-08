@@ -1831,8 +1831,8 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
  * @author Emanuel Kluge <mail@emanuel-kluge.de>
  */
 /**
- * selectize.scss (v0.8.7)
- * Copyright (c) 2014 Emanuel Kluge
+ * selectize.default.css (v0.12.1) - Default Theme
+ * Copyright (c) 2013–2015 Brian Reavis & contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at:
@@ -1843,22 +1843,114 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  *
- * @author Emanuel Kluge <mail@emanuel-kluge.de>
+ * @author Brian Reavis <brian@thirdroute.com>
  */
+.selectize-control.plugin-drag_drop.multi > .selectize-input > div.ui-sortable-placeholder {
+  visibility: visible !important;
+  background: #f2f2f2 !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 0 none !important;
+  -webkit-box-shadow: inset 0 0 12px 4px white;
+  box-shadow: inset 0 0 12px 4px white; }
+
+.selectize-control.plugin-drag_drop .ui-sortable-placeholder::after {
+  content: '!';
+  visibility: hidden; }
+
+.selectize-control.plugin-drag_drop .ui-sortable-helper {
+  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); }
+
+.selectize-dropdown-header {
+  position: relative;
+  padding: 5px 12px;
+  border-bottom: 1px solid rgba(77, 77, 77, 0);
+  background: rgba(11, 11, 11, 0);
+  -webkit-border-radius: none none 0 0;
+  -moz-border-radius: none none 0 0;
+  border-radius: none none 0 0; }
+
+.selectize-dropdown-header-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  color: #bbbbbb;
+  opacity: 0.4;
+  margin-top: -12px;
+  line-height: 20px;
+  font-size: 20px !important; }
+
+.selectize-dropdown-header-close:hover {
+  color: #7b7b7b; }
+
+.selectize-dropdown.plugin-optgroup_columns .optgroup {
+  border-right: 1px solid #f2f2f2;
+  border-top: 0 none;
+  float: left;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
+.selectize-dropdown.plugin-optgroup_columns .optgroup:last-child {
+  border-right: 0 none; }
+
+.selectize-dropdown.plugin-optgroup_columns .optgroup:before {
+  display: none; }
+
+.selectize-dropdown.plugin-optgroup_columns .optgroup-header {
+  border-top: 0 none; }
+
+.selectize-control.plugin-remove_button [data-value] {
+  position: relative;
+  padding-right: 24px !important; }
+
+.selectize-control.plugin-remove_button [data-value] .remove {
+  z-index: 1;
+  /* fixes ie bug (see #392) */
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 17px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: inherit;
+  text-decoration: none;
+  vertical-align: middle;
+  display: inline-block;
+  padding: 2px 0 0 0;
+  border-left: 1px solid rgba(77, 77, 77, 0);
+  -webkit-border-radius: 0 2px 2px 0;
+  -moz-border-radius: 0 2px 2px 0;
+  border-radius: 0 2px 2px 0;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
+.selectize-control.plugin-remove_button [data-value] .remove:hover {
+  background: rgba(0, 0, 0, 0.05); }
+
+.selectize-control.plugin-remove_button [data-value].active .remove {
+  border-left-color: rgba(77, 77, 77, 0); }
+
+.selectize-control.plugin-remove_button .disabled [data-value] .remove:hover {
+  background: none; }
+
+.selectize-control.plugin-remove_button .disabled [data-value] .remove {
+  border-left-color: rgba(153, 153, 153, 0); }
+
 .selectize-control {
   position: relative; }
 
-.selectize-dropdown,
-.selectize-input,
-.selectize-input input {
+.selectize-dropdown, .selectize-input, .selectize-input input {
   color: #bbbbbb;
   font-family: "Source Sans Pro", sans-serif;
   font-size: inherit;
   line-height: inherit;
   -webkit-font-smoothing: inherit; }
 
-.selectize-input,
-.selectize-control.single .selectize-input.input-active {
+.selectize-input, .selectize-control.single .selectize-input.input-active {
   background: transparent;
   cursor: text;
   display: inline-block; }
@@ -1925,9 +2017,6 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
     background: none !important;
     line-height: inherit !important;
     -webkit-user-select: auto !important;
-    -moz-user-select: auto !important;
-    -ms-user-select: auto !important;
-    user-select: auto !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important; }
     .selectize-input > input::-ms-clear {
@@ -1935,12 +2024,12 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
     .selectize-input > input:focus {
       outline: none !important; }
 
-.selectize-input:after {
+.selectize-input::after {
   content: ' ';
   display: block;
   clear: left; }
 
-.selectize-input.dropdown-active:before {
+.selectize-input.dropdown-active::before {
   content: ' ';
   display: block;
   position: absolute;
@@ -1953,7 +2042,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 .selectize-dropdown {
   position: absolute;
   z-index: 10;
-  border: none;
+  border: 1px solid rgba(77, 77, 77, 0);
   background: transparent;
   margin: -1px 0 0 0;
   border-top: 0 none;
@@ -2039,8 +2128,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
   background: none;
   -webkit-box-shadow: none;
   box-shadow: none; }
-  .selectize-control.multi .selectize-input.disabled [data-value],
-  .selectize-control.multi .selectize-input.disabled [data-value] .remove {
+  .selectize-control.multi .selectize-input.disabled [data-value], .selectize-control.multi .selectize-input.disabled [data-value] .remove {
     border-color: #e6e6e6; }
   .selectize-control.multi .selectize-input.disabled [data-value] .remove {
     background: none; }
@@ -2057,9 +2145,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
   background-image: -o-linear-gradient(top, #1da7ee, #178ee9);
   background-image: linear-gradient(to bottom, #1da7ee, #178ee9);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1da7ee', endColorstr='#178ee9', GradientType=0);
-  -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.03);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.03); }
+  filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='argb(#1da7ee)', endColorstr='argb(#178ee9)', GradientType=0)";
+  -webkit-box-shadow: "0 1px 0 rgba(black, 0.2), inset 0 1px rgba(white, 0.03)";
+  box-shadow: "0 1px 0 rgba(black, 0.2), inset 0 1px rgba(white, 0.03)"; }
   .selectize-control.multi .selectize-input [data-value].active {
     background-color: #0085d4;
     background-image: -moz-linear-gradient(top, #008fd8, #0075cf);
@@ -2068,11 +2156,11 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
     background-image: -o-linear-gradient(top, #008fd8, #0075cf);
     background-image: linear-gradient(to bottom, #008fd8, #0075cf);
     background-repeat: repeat-x;
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008fd8', endColorstr='#0075cf', GradientType=0); }
+    filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='argb(#008fd8)', endColorstr='argb(#0075cf)', GradientType=0)"; }
 
 .selectize-control.single .selectize-input {
-  -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  -webkit-box-shadow: "0 1px 0 rgba(black, 0.05), inset 0 1px 0 rgba(white, 0.8)";
+  box-shadow: "0 1px 0 rgba(black, 0.05), inset 0 1px 0 rgba(white, 0.8)";
   background-color: #f9f9f9;
   background-image: -moz-linear-gradient(top, #fefefe, #f2f2f2);
   background-image: -webkit-gradient(linear, 0 0, 0 100%, left, right);
@@ -2080,16 +2168,15 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
   background-image: -o-linear-gradient(top, #fefefe, #f2f2f2);
   background-image: linear-gradient(to bottom, #fefefe, #f2f2f2);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f2f2f2', GradientType=0); }
+  filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='argb(#fefefe)', endColorstr='argb(#f2f2f2)', GradientType=0)"; }
 
-.selectize-control.single .selectize-input,
-.selectize-dropdown.single {
+.selectize-control.single .selectize-input, .selectize-dropdown.single {
   border-color: #b8b8b8; }
 
 .selectize-dropdown .optgroup-header {
   padding-top: 7px;
   font-weight: bold;
-  font-size: .85em; }
+  font-size: 0.85em; }
 
 .selectize-dropdown .optgroup {
   border-top: 1px solid rgba(77, 77, 77, 0); }
@@ -5271,6 +5358,163 @@ tags-input .tags {
 tags-input .host {
   height: auto !important; }
 
+tags-input {
+  display: block; }
+
+tags-input *, tags-input *:before, tags-input *:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; }
+
+tags-input .host {
+  position: relative;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  height: 100%; }
+
+tags-input .host:active {
+  outline: none; }
+
+tags-input .tags {
+  -moz-appearance: textfield;
+  -webkit-appearance: textfield;
+  padding: 1px;
+  overflow: hidden;
+  word-wrap: break-word;
+  cursor: text;
+  background-color: #fff;
+  border: 1px solid darkgray;
+  box-shadow: 1px 1px 1px 0 lightgray inset;
+  height: 100%; }
+
+tags-input .tags.focused {
+  outline: none;
+  -webkit-box-shadow: 0 0 3px 1px rgba(5, 139, 242, 0.6);
+  -moz-box-shadow: 0 0 3px 1px rgba(5, 139, 242, 0.6);
+  box-shadow: 0 0 3px 1px rgba(5, 139, 242, 0.6); }
+
+tags-input .tags .tag-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none; }
+
+tags-input .tags .tag-item {
+  margin: 2px;
+  padding: 0 5px;
+  display: inline-block;
+  float: left;
+  font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  height: 26px;
+  line-height: 25px;
+  border: 1px solid #acacac;
+  border-radius: 3px;
+  background: -webkit-linear-gradient(top, #f0f9ff 0%, #cbebff 47%, #a1dbff 100%);
+  background: linear-gradient(to bottom, #f0f9ff 0%, #cbebff 47%, #a1dbff 100%); }
+
+tags-input .tags .tag-item.selected {
+  background: -webkit-linear-gradient(top, #febbbb 0%, #fe9090 45%, #ff5c5c 100%);
+  background: linear-gradient(to bottom, #febbbb 0%, #fe9090 45%, #ff5c5c 100%); }
+
+tags-input .tags .tag-item .remove-button {
+  margin: 0 0 0 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  vertical-align: middle;
+  font: bold 16px Arial, sans-serif;
+  color: #585858; }
+
+tags-input .tags .tag-item .remove-button:active {
+  color: #ff0000; }
+
+tags-input .tags .input {
+  border: 0;
+  outline: none;
+  margin: 2px;
+  padding: 0;
+  padding-left: 5px;
+  float: left;
+  height: 26px;
+  font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+tags-input .tags .input.invalid-tag {
+  color: #ff0000; }
+
+tags-input .tags .input::-ms-clear {
+  display: none; }
+
+tags-input.ng-invalid .tags {
+  -webkit-box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.6);
+  -moz-box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.6);
+  box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.6); }
+
+tags-input[disabled] .host:focus {
+  outline: none; }
+
+tags-input[disabled] .tags {
+  background-color: #eee;
+  cursor: default; }
+
+tags-input[disabled] .tags .tag-item {
+  opacity: 0.65;
+  background: -webkit-linear-gradient(top, #f0f9ff 0%, rgba(203, 235, 255, 0.75) 47%, rgba(161, 219, 255, 0.62) 100%);
+  background: linear-gradient(to bottom, #f0f9ff 0%, rgba(203, 235, 255, 0.75) 47%, rgba(161, 219, 255, 0.62) 100%); }
+
+tags-input[disabled] .tags .tag-item .remove-button {
+  cursor: default; }
+
+tags-input[disabled] .tags .tag-item .remove-button:active {
+  color: #585858; }
+
+tags-input[disabled] .tags .input {
+  background-color: #eee;
+  cursor: default; }
+
+tags-input .autocomplete {
+  margin-top: 5px;
+  position: absolute;
+  padding: 5px 0;
+  z-index: 999;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2); }
+
+tags-input .autocomplete .suggestion-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  max-height: 280px;
+  overflow-y: auto;
+  position: relative; }
+
+tags-input .autocomplete .suggestion-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #000;
+  background-color: #fff; }
+
+tags-input .autocomplete .suggestion-item.selected {
+  color: #fff;
+  background-color: #0097cf; }
+
+tags-input .autocomplete .suggestion-item.selected em {
+  color: #fff;
+  background-color: #0097cf; }
+
+tags-input .autocomplete .suggestion-item em {
+  font: normal bold 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #000;
+  background-color: #fff; }
+
+/*# sourceMappingURL=ng-tags-input.css.map */
 /**
  * prism.js default theme for JavaScript, CSS and HTML
  * Based on dabblet (http://dabblet.com)
@@ -5459,6 +5703,15 @@ img-crop .loading {
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important; }
 
+.admin-author {
+  height: 1em; }
+
+.admin-author {
+  max-width: 100%; }
+
+.admin-author__avatar {
+  height: 1em; }
+
 /*
  * copy to PI - temporary
  */
@@ -5622,3 +5875,6 @@ ul {
   float: right;
   display: block;
   cursor: pointer; }
+
+.pi-table__action-col {
+  white-space: nowrap; }
