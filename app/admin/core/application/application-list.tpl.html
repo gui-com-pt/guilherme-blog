@@ -1,0 +1,20 @@
+<table infinite-scroll="ctrl.query()" infinite-scroll-disabled="ctrl.queryModel.busy" infinite-scroll-immediate-check="true" class="pi-table pi-table-data">
+	<thead class="pi-table__head">
+		<tr>
+			<td>Name</td>
+			<td>Domain</td>
+			<td></td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="ng-cloak" ng-show="ctrl.results.length === 0"><td>No applications to display.</td></tr>
+		<tr ng-repeat="app in ctrl.results">
+	  		<td><span ng-bind="app.name"></span></td>
+	  		<td><span ng-bind="app.domain"></span></td>
+	  		<td class="pi-table__action-col">
+	  			<button ui-sref="admin-event-save({id: event.id})">Editar</button>
+	  			<button ui-sref="admin-event-state({id: event.id})">Estado</button>
+	  			<button ui-sref="admin-event-category-change({id: event.id})">Categoria</button></td>
+		</tr>
+	</tbody>
+</table>

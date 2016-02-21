@@ -38,14 +38,14 @@
       <div class="pi-nav">
       <ul>
             <li><a ui-sref="article-list({categoryId: null, name: null})" ui-sref-opts="{reload: true}">guilherme.ovh</a></li>
-            <li><a target="_blank" href="https://codigo.ovh">my portuguese blog</a></li>
+            <!--<li><a target="_blank" href="https://codigo.ovh">my portuguese blog</a></li>-->
             <li><a ui-sref="cv">my cv</a></li>
-            <li><a ui-sref="question-list">Perguntas</a></li>
+            <!--<li><a ui-sref="question-list">Perguntas</a></li>-->
             <li><a href="">Manage</a>
                 <ul>
                   <li><a ui-sref="admin-article-list">Articles</a></li>
                   <li><a ui-sref="admin-article-create">Criar Artigo</a></li>
-                  <li><a ui-sref="category-list">Categorias</a></li>
+                  <li><a ui-sref="admin-article-category">Categorias</a></li>
                   <li><a ui-sref="category-create">Criar Categoria</a></li>
                 </ul>
             </li>
@@ -57,7 +57,13 @@
                   <li><a ui-sref="admin-event-category-create">Criar Categoria</a></li>
                 </ul>
             </li>
-
+            <li><a href="">Applications</a>
+                <ul>
+                  <li><a ui-sref="admin-application-list">Applications</a></li>
+                  <li><a ui-sref="admin-application-create">Create Application</a></li>
+                </ul>
+            </li>
+            <li><a ui-sref="application-current" ng-bind="$root.currentApplication.name"></a></li>
         </ul>
           <ul class="pi-list__right">
               <li>

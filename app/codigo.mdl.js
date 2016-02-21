@@ -29,7 +29,7 @@ function getCookie(cname) {
           var $http = initInjector.get('$http');
           var _response;
 
-          $http.get('https://guilherme.ovh/api/init').then(
+          $http.get('http://localhost/api/init').then(
               function(response) {
                   _response = response;
                   angular.module('config', []).constant('codigoModel', _response.data);
@@ -77,7 +77,7 @@ function getCookie(cname) {
                 controllerAs: 'ctrl'
             })
             .state('admin-article-category', {
-                url: '/artigo-category/:id',
+                url: '/admin-category/:id',
                 templateUrl: 'admin/core/article/article-category.tpl.html',
                 controller: 'admin.core.article.articleCategoryCtrl',
                 controllerAs: 'ctrl'
@@ -155,14 +155,15 @@ function getCookie(cname) {
 
   angular
     .module('codigo')
-      .config(['facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
+      .config(['piProvider', 'facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(piProvider, facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
 
+        piProvider.setAppId("56bacb095f27dda90aa1bf86");
         googleAdsenseConfigProvider.setClient('ca-pub-1750926490246398');
         googleAdsenseConfigProvider.setSlot('5417208575');
 
         $urlRouterProvider.otherwise('/');
 
-        piHttpProvider.setBaseUrl('https://viseu.ovh/api');
+        piHttpProvider.setBaseUrl('http://localhost/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');

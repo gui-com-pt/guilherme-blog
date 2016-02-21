@@ -29,7 +29,7 @@ function getCookie(cname) {
           var $http = initInjector.get('$http');
           var _response;
 
-          $http.get('https://guilherme.ovh/api/init').then(
+          $http.get('http://localhost/api/init').then(
               function(response) {
                   _response = response;
                   angular.module('config', []).constant('codigoModel', _response.data);
@@ -77,7 +77,7 @@ function getCookie(cname) {
                 controllerAs: 'ctrl'
             })
             .state('admin-article-category', {
-                url: '/artigo-category/:id',
+                url: '/admin-category/:id',
                 templateUrl: 'admin/core/article/article-category.tpl.html',
                 controller: 'admin.core.article.articleCategoryCtrl',
                 controllerAs: 'ctrl'
@@ -155,14 +155,15 @@ function getCookie(cname) {
 
   angular
     .module('codigo')
-      .config(['facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
+      .config(['piProvider', 'facebookMetaServiceProvider', 'piHttpProvider', '$locationProvider', '$stateProvider', 'uiSelectConfig', '$provide', 'tagsInputConfigProvider', '$httpProvider', '$urlRouterProvider', 'googleAdsenseConfigProvider', function(piProvider, facebookMetaServiceProvider, piHttpProvider, $locationProvider, $stateProvider, uiSelectConfig, $provide, tagsInputConfigProvider, $httpProvider, $urlRouterProvider, googleAdsenseConfigProvider){
 
+        piProvider.setAppId("56bacb095f27dda90aa1bf86");
         googleAdsenseConfigProvider.setClient('ca-pub-1750926490246398');
         googleAdsenseConfigProvider.setSlot('5417208575');
 
         $urlRouterProvider.otherwise('/');
 
-        piHttpProvider.setBaseUrl('https://viseu.ovh/api');
+        piHttpProvider.setBaseUrl('http://localhost/api');
 
         facebookMetaServiceProvider.setAuthor('https://www.facebook.com/living.with.jesus');
         facebookMetaServiceProvider.setPublisher('https://www.facebook.com/codigo.ovh');
@@ -939,18 +940,6 @@ function baseListCtrl($scope, $stateParams) {
 })();
 (function(){
     angular
-        .module('codigo')
-        .controller('codigo.core.article.categoryListCtrl', ['pi.core.article.articleCategorySvc', function(articleCategorySvc){
-            var self = this;
-
-            articleCategorySvc.find({})
-                .then(function(res){
-                    self.categories = res.data.categories;
-                })
-        }])
-})();
-(function(){
-    angular
         .module('codigo.core.article')
         .controller('codigo.core.article.categorySaveCtrl', ['pi.core.article.articleCategorySvc', '$state', '$stateParams', function(categorySvc, $state, $stateParams){
 
@@ -1066,6 +1055,100 @@ function baseListCtrl($scope, $stateParams) {
         .controller('codigo.core.question.questionViewCtrl', SportsNewsViewCtrl);
 })();
 (function(){
+    var ctrl = function(appSvc, $state, $rootScope){
+        var self = this;
+        this.model = {}; // the form model
+
+        this.create = function(){
+            var model = angular.copy(this.model);
+            
+            appSvc.post(model).then(function(res){
+                $state.go('admin-application-list');
+            });
+        };
+    };
+
+    ctrl.$inject = ['pi.core.app.appSvc', '$state', '$rootScope'];
+
+    angular
+        .module('codigo.admin.core')
+        .controller('admin.core.application.applicationCreateCtrl', ctrl);
+})();
+(function(){
+
+	angular
+	  	.module('codigo.admin.core')
+	  	.controller('admin.core.application.applicationCurrentCtrl', ['pi', 'pi.core.app.appSvc', '$scope', '$rootScope', 
+	  		function(pi, appSvc, $scope, $rootScope){
+	  			this.setCurrent = function(app) {
+	  				$rootScope.currentApplication = app;
+	  				pi.setAppId(app.id);
+	  			}
+	      	}
+		]);
+})();
+(function(){
+
+	angular
+	  	.module('codigo.admin.core')
+	  	.controller('admin.core.application.applicationListCtrl', ['pi.core.app.appSvc', '$scope', '$stateParams', 
+	  		function(appSvc, $scope, $stateParams){
+	  			baseListCtrl.call(this, $scope, $stateParams);
+	          	var self = this;
+
+	          	this.getData = function() {
+	            	return appSvc.find(self.getQueryModel(['name', 'categoryId'])).then(function(r){
+	               	 return r.data.applications || r.data;
+	            	}, function(){
+
+	            	});
+	          	}
+	      	}
+		]);
+})();
+(function(){
+
+	angular
+		.module('codigo.admin.core')
+		.run(['pi.core.app.appSvc', '$rootScope', 'pi',
+			function(appSvc, $rootScope, pi) {
+				appSvc.find().then(function(r){
+						$rootScope.applications = r.data.applications;
+						$rootScope.currentApplication = $rootScope.applications[0];
+						pi.setAppId($rootScope.currentApplication.id);
+	            	}, function(){
+	            		$rootScope.applications = [];
+	            	});
+		}])
+		.config(['$stateProvider', function($stateProvider){
+			$stateProvider
+				.state('application-current', {
+					url: '/application-current',
+					templateUrl: 'admin/core/application/application-current.tpl.html',
+					controller: 'admin.core.application.applicationCurrentCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-application-list', {
+					url: '/applications',
+					templateUrl: 'admin/core/application/application-list.tpl.html',
+					controller: 'admin.core.application.applicationListCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-application-save', {
+					url: '/application/:id/edit',
+					templateUrl: 'admin/core/application/application-save.tpl.html',
+					controller: 'admin.core.application.applicationSaveCtrl',
+					controllerAs: 'ctrl'
+				})
+				.state('admin-application-create',{
+					url: '/application/create',
+					templateUrl: 'admin/core/application/application-create.tpl.html',
+					controller: 'admin.core.application.applicationCreateCtrl',
+					controllerAs: 'ctrl'
+				});
+		}]);
+})();
+(function(){
     angular
         .module('codigo.admin.core')
         .controller('admin.core.article.articleSaveCategoryCtrl', ['pi.core.article.articleSvc', '$rootScope',
@@ -1090,20 +1173,20 @@ function baseListCtrl($scope, $stateParams) {
 (function(){
     angular
         .module('codigo.admin.core')
-        .controller('admin.core.article.articleCategoryCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
-            function(articleSvc, $state, $stateParams){
+        .controller('admin.core.article.articleCategoryCtrl', ['pi.core.article.articleCategorySvc', '$scope', '$stateParams',
+            function(articleCategorySvc, $scope, $stateParams){
+
+                baseListCtrl.call(this, $scope, $stateParams);
                 var self = this;
-                self.modelBusy = false;
 
-                articleSvc.get($stateParams.id).then(function(res){
-                    self.keywords = res.data.keywords;
-                });
+                this.getData = function() {
+                    var model = self.getQueryModel(['name', 'categoryId']);
 
-                this.save = function(tag){
-                    articleSvc.postKeywords($stateParams.id, [tag]).then(function(res){
-                        self.keywords = res.data.keywords;
-                    });
-                };
+                    return articleCategorySvc.find(model).then(function(r){
+                            return r.data.categories || r.data;
+                        }, function(){
+                        });
+                }
             }
         ]);
 })();
@@ -1372,8 +1455,8 @@ function baseListCtrl($scope, $stateParams) {
                 eventSvc.get($stateParams.id)
                     .then(function(res){
                         self.model = res.data.event;
-                        self.model.doorTime = new Date(self.model.doorTime)
-                        self.model.endDate = new Date(self.model.endDate);
+                        self.model.doorTime = new Date(self.model.doorTime * 1000)
+                        self.model.endDate = new Date(self.model.endDate * 1000);
                         self.state = res.data.event.state;
                         self.modelBusy = false;
                     });

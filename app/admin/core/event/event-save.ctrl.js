@@ -11,8 +11,8 @@
                 eventSvc.get($stateParams.id)
                     .then(function(res){
                         self.model = res.data.event;
-                        self.model.doorTime = new Date(self.model.doorTime)
-                        self.model.endDate = new Date(self.model.endDate);
+                        self.model.doorTime = new Date(self.model.doorTime * 1000)
+                        self.model.endDate = new Date(self.model.endDate * 1000);
                         self.state = res.data.event.state;
                         self.modelBusy = false;
                     });

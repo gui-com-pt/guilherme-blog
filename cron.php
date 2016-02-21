@@ -38,7 +38,8 @@ class LocalHost extends MockHost {
   	$this->registerPlugin(new SpotEventsPlugin());
 
     $db = $container->get('OdmConfiguration');
-    $db->setDefaultDb('viseuapp');
+    $db->setDefaultDb('viseu-app');
+    $db->setHostname('ds1.codigo.ovh');
   }
 }
 

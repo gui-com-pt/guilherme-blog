@@ -12857,7 +12857,7 @@ angular.module('ngResource', ['ng']).
 	return moment;
 }));
 
-/* angular-moment.js / v1.0.0-beta.3 / (c) 2013, 2014, 2015 Uri Shaked / MIT Licence */
+/* angular-moment.js / v1.0.0-beta.4 / (c) 2013, 2014, 2015, 2016 Uri Shaked / MIT Licence */
 
 'format amd';
 /* global define */

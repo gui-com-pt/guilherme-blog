@@ -1,17 +1,15 @@
-<div class="view-small">
-    <div class="pi-form__wrapper">
-        <form class="fit-form" name="createForm">
-            <div class="pi-form__group">
-                <ui-select required ng-model="ctrl.categorySelected" theme="selectize">
-                    <ui-select-match placeholder="Categorias">{{$select.selected.displayName}}</ui-select-match>
-                    <ui-select-choices repeat="cat in $root.categories | filter: $select.search">
-                        <span ng-bind="cat.name | highlight: $select.search"></span>
-                    </ui-select-choices>
-                </ui-select>
-            </div>
-            <div class="pi-form__footer">
-                <button pi-btn-save ng-disabled="createForm.$invalid || createForm.$pristine" ng-click="ctrl.save()">Save Changes</button>
-            </div>
-        </form>
-    </div>
-</div>
+<table infinite-scroll="ctrl.query()" infinite-scroll-disabled="ctrl.queryModel.busy" infinite-scroll-immediate-check="true" class="pi-table pi-table-data">
+    <thead class="pi-table__head">
+        <tr>
+            <td>Name</td>
+            <td></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="ng-cloak" ng-show="ctrl.results.length === 0"><td>No results to display.</td></tr>
+        <tr ng-repeat="news in ctrl.results">
+            <td><span ng-bind="news.name"></span></td>
+            <td class="pi-table__action-col"><button ui-sref="category-save({id: news.id})">Editar</button></td>
+        </tr>
+    </tbody>
+</table>

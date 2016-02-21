@@ -1,20 +1,20 @@
 (function(){
     angular
         .module('codigo.admin.core')
-        .controller('admin.core.article.articleCategoryCtrl', ['pi.core.article.articleSvc', '$state', '$stateParams',
-            function(articleSvc, $state, $stateParams){
+        .controller('admin.core.article.articleCategoryCtrl', ['pi.core.article.articleCategorySvc', '$scope', '$stateParams',
+            function(articleCategorySvc, $scope, $stateParams){
+
+                baseListCtrl.call(this, $scope, $stateParams);
                 var self = this;
-                self.modelBusy = false;
 
-                articleSvc.get($stateParams.id).then(function(res){
-                    self.keywords = res.data.keywords;
-                });
+                this.getData = function() {
+                    var model = self.getQueryModel(['name', 'categoryId']);
 
-                this.save = function(tag){
-                    articleSvc.postKeywords($stateParams.id, [tag]).then(function(res){
-                        self.keywords = res.data.keywords;
-                    });
-                };
+                    return articleCategorySvc.find(model).then(function(r){
+                            return r.data.categories || r.data;
+                        }, function(){
+                        });
+                }
             }
         ]);
 })();

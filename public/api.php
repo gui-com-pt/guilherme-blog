@@ -1,6 +1,6 @@
 <?hh
 
-use Pi\AppHost;
+use MultiTenant\MultiTenantHost;
 use Pi\Odm\OdmPlugin;
 use Pi\Interfaces\IContainer;
 use Pi\FileSystem\FileSystemService;
@@ -21,7 +21,7 @@ class MongoCursorException extends \Exception {
 
 }
 
-class DemoHost extends AppHost {
+class DemoHost extends MultiTenantHost {
 
   public function configure(IContainer $container)
   {
@@ -39,6 +39,8 @@ class DemoHost extends AppHost {
     $db = $container->get('OdmConfiguration');
     $db->setDefaultDb('viseu-app');
     $db->setHostname('ds1.codigo.ovh');
+
+
   }
 }
 

@@ -1,0 +1,23 @@
+<div class="view-1">
+    <div class="view-1__side">
+        
+    </div>
+    <div class="view-1__content">
+        <div class="pi-form__wrapper">
+            <form class="fit-form" name="createForm">
+                <div class="pi-form__group">
+                    <input class="pi-form__control" type="text" required class="pi-form__group-control" placeholder="Name" ng-model="ctrl.model.name" />
+                </div>
+                <div class="pi-form__group">
+                    <input class="pi-form__control" type="text" required class="pi-form__group-control" placeholder="Domain" ng-model="ctrl.model.domain" />
+                </div>
+                <div class="pi-form__group">
+                    <div placeholder="O conteúdo principal da Notícia" text-angular  ng-model="ctrl.model.description"></div>
+                </div>
+                <div class="pi-form__footer">
+                    <button ng-disabled="createForm.$invalid || createForm.$pristine" ng-click="ctrl.create()">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

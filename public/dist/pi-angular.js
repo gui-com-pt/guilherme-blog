@@ -24,6 +24,9 @@
 				return {
 					getAppId: function() {
 						return appId;
+					},
+					setAppId: function(value) {
+						appId = value;
 					}
 				}
 			}];
@@ -1145,6 +1148,81 @@ angular
 
 (function(){
 
+	var piFileManager = function(){
+
+
+
+		return {
+
+			$get: {
+
+			}
+		}
+	}
+
+	var piUploadService = function(){
+
+		var upload = function(file, uploadDto){
+
+		}
+		return {
+			upload: upload
+		}
+	}
+
+	var piFileDashboard = function(){
+
+		return {
+			templateUrl: '/html/pi/file-dashboard.html'
+		}
+	}
+	var piFileUpload = function(){
+
+		var link = function(scope, elem, attr){
+
+		}
+
+		var controller = function($scope){
+			this.upload = function(){
+
+			}
+		}
+		return {
+			link: link,
+			controller: controller,
+			controllerAs: 'ctrl'
+		}
+	}
+
+	var  piFileUploadArea = function(){
+
+		return {
+			templateUrl: '/html/pi/file-upload-area.html'
+		}
+	}
+
+	var piFileUploadBrowse = function(){
+		return {
+			templateUrl: '/html/pi/file-upload-browser.html'
+		}
+	}
+
+	var piFileEditCard = function(){
+		return {
+			templateUrl: '/html/pi/file-edit-card.html'
+		}
+	}
+
+	var piFileCard = function(){
+		return {
+			templateUrl: '/html/pi/file-card.html'
+		}
+	}
+
+	
+})();
+(function(){
+
 	var AccountRecover = function(AccountRecoverService)
 	{
 		var linkFn = function(scope, elem, attrs)
@@ -2003,81 +2081,6 @@ var INTEGER_REGEXP = /^\-?\d*$/;
         .module('pi')
         .directive('uploadThumbnail', UploadThumbnail);
 
-})();
-(function(){
-
-	var piFileManager = function(){
-
-
-
-		return {
-
-			$get: {
-
-			}
-		}
-	}
-
-	var piUploadService = function(){
-
-		var upload = function(file, uploadDto){
-
-		}
-		return {
-			upload: upload
-		}
-	}
-
-	var piFileDashboard = function(){
-
-		return {
-			templateUrl: '/html/pi/file-dashboard.html'
-		}
-	}
-	var piFileUpload = function(){
-
-		var link = function(scope, elem, attr){
-
-		}
-
-		var controller = function($scope){
-			this.upload = function(){
-
-			}
-		}
-		return {
-			link: link,
-			controller: controller,
-			controllerAs: 'ctrl'
-		}
-	}
-
-	var  piFileUploadArea = function(){
-
-		return {
-			templateUrl: '/html/pi/file-upload-area.html'
-		}
-	}
-
-	var piFileUploadBrowse = function(){
-		return {
-			templateUrl: '/html/pi/file-upload-browser.html'
-		}
-	}
-
-	var piFileEditCard = function(){
-		return {
-			templateUrl: '/html/pi/file-edit-card.html'
-		}
-	}
-
-	var piFileCard = function(){
-		return {
-			templateUrl: '/html/pi/file-card.html'
-		}
-	}
-
-	
 })();
 /**
  * Filter to reverse a list
@@ -3778,7 +3781,7 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 				this.persist = false;
 
 				return  {
-					$get: function($http) {
+					$get: function($http, pi) {
 
 						var s = this;
 
@@ -3787,6 +3790,9 @@ var INTEGER_REGEXP = /^\-?\d*$/;
 						function getAugmentedConfig(cfg) {
 							var config  = cfg || {};
 							config.headers = config.headers || {};
+							if(!_.isUndefined(pi.getAppId())) {
+								config.headers['X-Pi-Application'] = pi.getAppId();
+							}
 							//config.headers.someHeaderName = 'some-header-value';
 							return config;
 						}
